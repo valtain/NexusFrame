@@ -97,3 +97,16 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+
+# .idea 폴더 무시
+.idea/
+
+# 하지만 다음은 포함 (Whitelisting)
+!.idea/codeStyles/
+!.idea/runConfigurations/
+!.idea/vcs.xml
+!.idea/inspectionProfiles/
+
+# 다시 확실하게 workspace.xml 무시
+.idea/workspace.xml
