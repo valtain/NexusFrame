@@ -43,6 +43,7 @@ ExportedObj/
 *.csproj
 *.unityproj
 *.sln
+*.slnx
 *.suo
 *.tmp
 *.user
@@ -112,7 +113,4 @@ InitTestScene*.unity*
 .idea/workspace.xml
 
 # vs code
-.vscode/*
-
-# visual studio
-*.slnx
+.vscode/
