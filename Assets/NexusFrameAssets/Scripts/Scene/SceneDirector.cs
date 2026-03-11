@@ -1,82 +1,98 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
 namespace NexusFrame
 {
-    public class SceneDirector: MonoPreload<SceneDirector>
+    public class SceneDirector : MonoPreload<SceneDirector>
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() => ResetInstance();
 
-        private string _currentMasterSceneName = string.Empty;
-        private List<SceneType> _loadedPrerequisiteScenes = null;
+        private readonly HashSet<string> _loadedContentScenes = new();
+        private readonly HashSet<SceneType> _loadedPrerequisiteScenes = new();
 
         protected override void Awake()
         {
             base.Awake();
-            _currentMasterSceneName = SceneManager.GetActiveScene().name;
-            _loadedPrerequisiteScenes = new () { SceneType.Preload };
+            _loadedPrerequisiteScenes.Add(SceneType.Preload);
+
+            // Preload 씬 로딩 시점에 이미 떠있는 씬들을 content로 등록
+            // Splash(Startup), 또는 ColdStartup 시나리오 대응
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var scene = SceneManager.GetSceneAt(i);
+                var sceneType = SceneUtils.GetSceneType(scene.name);
+                if (!SceneUtils.IsPrerequisiteScene(sceneType) && sceneType != SceneType.NaV)
+                {
+                    _loadedContentScenes.Add(scene.name);
+                }
+            }
         }
 
-        private async UniTask LoadSceneInternal(string sceneName, bool isMasterScene = false)
+        // ── Public Entry Point ────────────────────────────────────────────
+
+        public static async UniTask LoadScene(string sceneName)
         {
             Debug.Assert(!string.IsNullOrEmpty(sceneName));
 
-            await CheckPrerequisiteScenes(sceneName);
+            await EnsurePreloadReady();
+            await Instance.LoadSceneInternal(sceneName);
+        }
 
-            if (!string.IsNullOrEmpty(_currentMasterSceneName))
-            {
-                await SceneManager.UnloadSceneAsync(_currentMasterSceneName);
-            }
+        public static async UniTask EnsurePreloadReady()
+        {
+            if (HasInstance) return;
 
-            _currentMasterSceneName = sceneName;
+            await SceneManager.LoadSceneAsync(SceneUtils.PreloadSceneName, LoadSceneMode.Additive);
+            await UniTask.WaitUntil(() => HasInstance);
+        }
+
+        // ── Internal ──────────────────────────────────────────────────────
+
+        private async UniTask LoadSceneInternal(string sceneName)
+        {
+            var sceneType = SceneUtils.GetSceneType(sceneName);
+            Debug.Assert(sceneType != SceneType.NaV, $"SceneType not found: {sceneName}");
+            Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be loaded directly: {sceneName}");
+
+            await LoadPrerequisites(sceneType);
+            await UnloadContentScenes();
+
+            _loadedContentScenes.Add(sceneName);
             await SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         }
 
-        private async UniTask CheckPrerequisiteScenes(string sceneName)
+        private async UniTask LoadPrerequisites(SceneType sceneType)
         {
-            var sceneType = SceneUtils.GetSceneType(sceneName);
-            Debug.Assert(sceneType != SceneType.NaV && !SceneUtils.IsPrerequisiteScene(sceneType));
-
-            var prerequisiteSceneTypes = SceneUtils.GetPrerequisiteScenes(sceneType);
-            // ReSharper disable once HeapView.ObjectAllocation.Possible
-            foreach (var prerequisiteSceneType in prerequisiteSceneTypes)
+            var required = SceneUtils.GetPrerequisiteScenes(sceneType);
+            foreach (var prerequisiteType in required)
             {
-                if (_loadedPrerequisiteScenes.Contains(prerequisiteSceneType))
-                {
-                    continue;
-                }
-                _loadedPrerequisiteScenes.Add(prerequisiteSceneType);
-                var prerequisiteSceneName = SceneUtils.GetSpecialSceneName(prerequisiteSceneType);
+                if (_loadedPrerequisiteScenes.Contains(prerequisiteType)) continue;
+
+                _loadedPrerequisiteScenes.Add(prerequisiteType);
+                var prerequisiteSceneName = SceneUtils.GetSpecialSceneName(prerequisiteType);
                 await SceneManager.LoadSceneAsync(prerequisiteSceneName, LoadSceneMode.Additive);
             }
         }
 
-        public static bool IsPreloadSceneLoaded() =>
-#if UNITY_EDITOR
-            SceneDirector.HasInstance;
-#else
-            true; // 실제 게임에서는 Preload 씬이 항상 로드되어 있다고 가정
-#endif
-
-        public static bool IsPrerequisiteSceneLoaded(SceneType sceneType)
+        private async UniTask UnloadContentScenes()
         {
-            return
-                sceneType != SceneType.NaV &&
-                IsPreloadSceneLoaded() &&
-                Instance._loadedPrerequisiteScenes.Contains(sceneType);
+            // GamePlay 있는 상태면 content 씬 관리는 GamePlay에게 위임
+            if (_loadedPrerequisiteScenes.Contains(SceneType.GamePlay)) return;
+
+            foreach (var contentScene in _loadedContentScenes)
+                await SceneManager.UnloadSceneAsync(contentScene);
+
+            _loadedContentScenes.Clear();
         }
 
-        public static async UniTask<bool> LoadScene(string sceneName)
+        // ── Query ─────────────────────────────────────────────────────────
+
+        public static bool IsPrerequisiteLoaded(SceneType sceneType)
         {
-            if (!HasInstance)
-            {
-                await SceneManager.LoadSceneAsync(SceneUtils.PreloadSceneName, LoadSceneMode.Additive);
-            }
-            await Instance.LoadSceneInternal(sceneName);
-            return true;
+            return HasInstance && Instance._loadedPrerequisiteScenes.Contains(sceneType);
         }
     }
 }
