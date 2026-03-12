@@ -43,7 +43,10 @@ namespace NexusFrame
 
         public static async UniTask EnsurePreloadReady()
         {
-            if (HasInstance) return;
+            if (HasInstance)
+            {
+                return;
+            }
 
             await SceneManager.LoadSceneAsync(SceneUtils.PreloadSceneName, LoadSceneMode.Additive);
             await UniTask.WaitUntil(() => HasInstance);
@@ -69,7 +72,10 @@ namespace NexusFrame
             var required = SceneUtils.GetPrerequisiteScenes(sceneType);
             foreach (var prerequisiteType in required)
             {
-                if (_loadedPrerequisiteScenes.Contains(prerequisiteType)) continue;
+                if (_loadedPrerequisiteScenes.Contains(prerequisiteType))
+                {
+                    continue;
+                }
 
                 _loadedPrerequisiteScenes.Add(prerequisiteType);
                 var prerequisiteSceneName = SceneUtils.GetSpecialSceneName(prerequisiteType);
@@ -93,6 +99,25 @@ namespace NexusFrame
         public static bool IsPrerequisiteLoaded(SceneType sceneType)
         {
             return HasInstance && Instance._loadedPrerequisiteScenes.Contains(sceneType);
+        }
+
+        public static bool DoAllPrerequisiteLoaded(string sceneName)
+        {
+            if (!HasInstance)
+            {
+                return false;
+            }
+
+            var sceneType = SceneUtils.GetSceneType(sceneName);
+            var prerequisiteScenes = SceneUtils.GetPrerequisiteScenes(sceneType);
+            foreach(var scene in prerequisiteScenes)
+            {
+                if (Instance._loadedPrerequisiteScenes.Contains(scene))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
