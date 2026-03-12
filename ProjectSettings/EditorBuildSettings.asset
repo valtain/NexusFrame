@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/NexusFrameAssets/Scenes/Preload.unity
+    guid: 134ecda0da70eea43beaa1974ef0025e
+  - enabled: 1
     path: Assets/NexusFrameAssets/Scenes/Splash.unity
     guid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9
   - enabled: 1
