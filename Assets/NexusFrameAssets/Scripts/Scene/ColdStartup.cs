@@ -10,20 +10,20 @@ namespace NexusFrame
         private void Awake()
         {
 #if UNITY_EDITOR
+            var currentSceneName = SceneManager.GetActiveScene().name;
+            if (SceneDirector.DoAllPrerequisiteLoaded(currentSceneName))
+            {
+                return;
+            }
+
             var currentScene = SceneManager.GetActiveScene();
             foreach (var go in currentScene.GetRootGameObjects())
             {
                 if (go != gameObject) go.SetActive(false);
             }
-
-            StartAsync().Forget();
+            SceneDirector.LoadScene(currentSceneName).Forget();
 #endif
         }
 
-        private async UniTask StartAsync()
-        {
-            var currentSceneName = SceneManager.GetActiveScene().name;
-            await SceneDirector.LoadScene(currentSceneName);
-        }
     }
 }
