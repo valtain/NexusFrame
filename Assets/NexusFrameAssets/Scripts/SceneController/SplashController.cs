@@ -20,8 +20,6 @@ public class SplashController : MonoBehaviour
 
     private void Start()
     {
-        // Camera.main.backgroundColor = Color.black;
-        // Camera.main.clearFlags = CameraClearFlags.SolidColor;
 
         if (canvasGroup != null)
             canvasGroup.alpha = 0f;
