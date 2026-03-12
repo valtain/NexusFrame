@@ -1,7 +1,9 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
+using NexusFrame;
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -20,13 +22,15 @@ public class TitleController : MonoBehaviour
         Camera.main.backgroundColor = new Color(0.05f, 0.05f, 0.15f);
         Camera.main.clearFlags = CameraClearFlags.SolidColor;
 
-        StartCoroutine(BlinkPrompt());
+        BlinkPrompt().Forget();
     }
 
     private void Update()
     {
         if (!isTransitioning && Input.anyKeyDown)
-            StartCoroutine(GoToMainMenu());
+        {
+            GoToMainMenu().Forget();
+        }
     }
 
     /// <summary>
@@ -98,19 +102,20 @@ public class TitleController : MonoBehaviour
 #endif
     }
 
-    private IEnumerator BlinkPrompt()
+    private async UniTaskVoid BlinkPrompt()
     {
-        while (true)
+        var cancelToken = this.GetCancellationTokenOnDestroy();
+        while(!cancelToken.IsCancellationRequested)
         {
             promptText.enabled = !promptText.enabled;
-            yield return new WaitForSeconds(0.6f);
+            await UniTask.Delay(600, cancellationToken:cancelToken);
         }
     }
 
-    private IEnumerator GoToMainMenu()
+    private async UniTaskVoid GoToMainMenu()
     {
         isTransitioning = true;
-        yield return new WaitForSeconds(0.2f);
-        SceneManager.LoadScene("MainMenu");
+        await UniTask.Delay(200);
+        SceneDirector.LoadScene("MainMenu").Forget();
     }
 }

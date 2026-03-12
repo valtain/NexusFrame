@@ -1,7 +1,8 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
+using NexusFrame;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -19,13 +20,13 @@ public class SplashController : MonoBehaviour
 
     private void Start()
     {
-        Camera.main.backgroundColor = Color.black;
-        Camera.main.clearFlags = CameraClearFlags.SolidColor;
+        // Camera.main.backgroundColor = Color.black;
+        // Camera.main.clearFlags = CameraClearFlags.SolidColor;
 
         if (canvasGroup != null)
             canvasGroup.alpha = 0f;
 
-        StartCoroutine(SplashSequence());
+        SplashSequence().Forget();
     }
 
     /// <summary>
@@ -86,22 +87,22 @@ public class SplashController : MonoBehaviour
 #endif
     }
 
-    private IEnumerator SplashSequence()
+    private async UniTaskVoid SplashSequence()
     {
-        yield return StartCoroutine(Fade(0f, 1f, fadeDuration));
-        yield return new WaitForSeconds(displayDuration);
-        yield return StartCoroutine(Fade(1f, 0f, fadeDuration));
-        SceneManager.LoadScene("Title");
+        await Fade(0f, 1f, fadeDuration);
+        await UniTask.Delay(Mathf.RoundToInt(displayDuration * 1000));
+        await Fade(1f, 0f, fadeDuration);
+        SceneDirector.LoadScene("Title").Forget();
     }
 
-    private IEnumerator Fade(float from, float to, float duration)
+    private async UniTask Fade(float from, float to, float duration)
     {
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             canvasGroup.alpha = Mathf.Lerp(from, to, elapsed / duration);
-            yield return null;
+            await UniTask.Yield();
         }
         canvasGroup.alpha = to;
     }
