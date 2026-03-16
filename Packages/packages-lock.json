@@ -249,13 +249,6 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unityagentbridge.server": {
-      "version": "https://github.com/ruizhengu/unity-agent-bridge.git?path=/UnityPackage",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "7c3d232c44666b16d78bb2744420de1f85f40815"
-    },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
       "depth": 0,
