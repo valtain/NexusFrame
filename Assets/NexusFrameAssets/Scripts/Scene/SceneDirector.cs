@@ -79,7 +79,9 @@ namespace NexusFrame
 
                 _loadedPrerequisiteScenes.Add(prerequisiteType);
                 var prerequisiteSceneName = SceneUtils.GetSpecialSceneName(prerequisiteType);
-                await SceneManager.LoadSceneAsync(prerequisiteSceneName, LoadSceneMode.Additive);
+                var asyncOp = SceneManager.LoadSceneAsync(prerequisiteSceneName, LoadSceneMode.Additive);
+                asyncOp.allowSceneActivation = false;
+                await asyncOp;
             }
         }
 
