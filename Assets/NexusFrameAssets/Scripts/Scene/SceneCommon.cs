@@ -25,8 +25,8 @@ namespace NexusFrame
             { "Splash", SceneType.Splash },
             { "Title", SceneType.Title },
             { "MainMenu", SceneType.MainMenu },
-            { "Level_0", SceneType.Level },
-            { "Level_1", SceneType.Level },
+            { "World0", SceneType.Level },
+            { "World1", SceneType.Level },
             { GamePlaySceneName, SceneType.GamePlay },
             { "Intro", SceneType.Title },
         };
