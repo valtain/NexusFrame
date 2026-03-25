@@ -41,16 +41,6 @@ namespace NexusFrame
             await Instance.LoadSceneInternal(sceneName);
         }
 
-        public static async UniTask LoadSceneAsColdStartup(string sceneName)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(sceneName));
-
-            await EnsurePreloadReady();
-            await SceneManager.UnloadSceneAsync(sceneName);
-            Instance._loadedContentScenes.Remove(sceneName);
-            await Instance.LoadSceneInternal(sceneName);
-        }
-
         public static async UniTask EnsurePreloadReady()
         {
             if (HasInstance)
