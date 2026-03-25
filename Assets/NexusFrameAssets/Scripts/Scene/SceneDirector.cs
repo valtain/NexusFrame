@@ -41,6 +41,16 @@ namespace NexusFrame
             await Instance.LoadSceneInternal(sceneName);
         }
 
+        public static async UniTask LoadSceneAsColdStartup(string sceneName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(sceneName));
+
+            await EnsurePreloadReady();
+            await SceneManager.UnloadSceneAsync(sceneName);
+            Instance._loadedContentScenes.Remove(sceneName);
+            await Instance.LoadSceneInternal(sceneName);
+        }
+
         public static async UniTask EnsurePreloadReady()
         {
             if (HasInstance)
@@ -60,14 +70,19 @@ namespace NexusFrame
             Debug.Assert(sceneType != SceneType.NaV, $"SceneType not found: {sceneName}");
             Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be loaded directly: {sceneName}");
 
-            await LoadPrerequisites(sceneType);
-            await UnloadContentScenes();
+            bool isGamePlayAlreadyLoaded = _loadedPrerequisiteScenes.Contains(SceneType.GamePlay);
+
+            await EnsurePrerequisitesLoaded(sceneType);
+            if (!isGamePlayAlreadyLoaded)
+            {
+                await UnloadContentScenes();
+            }
 
             _loadedContentScenes.Add(sceneName);
             await SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         }
 
-        private async UniTask LoadPrerequisites(SceneType sceneType)
+        private async UniTask EnsurePrerequisitesLoaded(SceneType sceneType)
         {
             var required = SceneUtils.GetPrerequisiteScenes(sceneType);
             foreach (var prerequisiteType in required)
@@ -79,31 +94,27 @@ namespace NexusFrame
 
                 _loadedPrerequisiteScenes.Add(prerequisiteType);
                 var prerequisiteSceneName = SceneUtils.GetSpecialSceneName(prerequisiteType);
-                var asyncOp = SceneManager.LoadSceneAsync(prerequisiteSceneName, LoadSceneMode.Additive);
-                asyncOp.allowSceneActivation = false;
-                await asyncOp;
+                await SceneManager.LoadSceneAsync(prerequisiteSceneName, LoadSceneMode.Additive);
             }
         }
 
         private async UniTask UnloadContentScenes()
         {
-            // GamePlay 있는 상태면 content 씬 관리는 GamePlay에게 위임
-            if (_loadedPrerequisiteScenes.Contains(SceneType.GamePlay)) return;
-
             foreach (var contentScene in _loadedContentScenes)
+            {
                 await SceneManager.UnloadSceneAsync(contentScene);
-
+            }
             _loadedContentScenes.Clear();
         }
 
         // ── Query ─────────────────────────────────────────────────────────
 
-        public static bool IsPrerequisiteLoaded(SceneType sceneType)
+        public static bool IsPrerequisiteSceneLoaded(SceneType sceneType)
         {
             return HasInstance && Instance._loadedPrerequisiteScenes.Contains(sceneType);
         }
 
-        public static bool DoAllPrerequisiteLoaded(string sceneName)
+        public static bool AreAllPrerequisitesLoadedFor(string sceneName)
         {
             if (!HasInstance)
             {
@@ -114,7 +125,7 @@ namespace NexusFrame
             var prerequisiteScenes = SceneUtils.GetPrerequisiteScenes(sceneType);
             foreach(var scene in prerequisiteScenes)
             {
-                if (Instance._loadedPrerequisiteScenes.Contains(scene))
+                if (Instance._loadedPrerequisiteScenes.Contains(scene) == false)
                 {
                     return false;
                 }

@@ -11,7 +11,7 @@ namespace NexusFrame
         {
 #if UNITY_EDITOR
             var currentSceneName = SceneManager.GetActiveScene().name;
-            if (SceneDirector.DoAllPrerequisiteLoaded(currentSceneName))
+            if (SceneDirector.AreAllPrerequisitesLoadedFor(currentSceneName))
             {
                 return;
             }
