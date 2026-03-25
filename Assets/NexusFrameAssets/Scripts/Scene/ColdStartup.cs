@@ -25,5 +25,10 @@ namespace NexusFrame
 #endif
         }
 
+        private void Start()
+        {
+            gameObject.SetActive(false);
+        }
+
     }
 }

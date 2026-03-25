@@ -3,13 +3,15 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Events;
 
-public abstract class SimplePlayerControllerBase : MonoBehaviour, IInputAxisOwner
+public abstract class PlayerControllerBase : MonoBehaviour, IInputAxisOwner
 {
     [Header("Input parameters")]
     public float Speed = 1f;
     public float SprintSpeed = 4f;
     public float JumpSpeed = 4f;
     public float SprintJumpSpeed = 6f;
+
+    public float damping = 0.5f;
 
     [Header("Input Axes")]
     public InputAxis MoveX = InputAxis.DefaultMomentary;
@@ -36,6 +38,5 @@ public abstract class SimplePlayerControllerBase : MonoBehaviour, IInputAxisOwne
         Sprint.Validate();
     }
 
-    public virtual void SetSafeMode(bool b) {}
     public abstract bool IsMoving {get;}
 }

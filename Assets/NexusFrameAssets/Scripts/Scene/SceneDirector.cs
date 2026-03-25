@@ -10,12 +10,16 @@ namespace NexusFrame
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() => ResetInstance();
 
+        [field: SerializeField]
+        public Camera MainCamera {get; private set;} = default;
+
         private readonly HashSet<string> _loadedContentScenes = new();
         private readonly HashSet<SceneType> _loadedPrerequisiteScenes = new();
 
         protected override void Awake()
         {
             base.Awake();
+            MainCamera = Camera.main;
             _loadedPrerequisiteScenes.Add(SceneType.Preload);
 
             // Preload 씬 로딩 시점에 이미 떠있는 씬들을 content로 등록
