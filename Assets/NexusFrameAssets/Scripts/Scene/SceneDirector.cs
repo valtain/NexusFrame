@@ -12,6 +12,7 @@ namespace NexusFrame
 
         [field: SerializeField]
         public Camera MainCamera {get; private set;} = default;
+        public Transform MainCameraTransform {get; private set;}
 
         private readonly HashSet<string> _loadedContentScenes = new();
         private readonly HashSet<SceneType> _loadedPrerequisiteScenes = new();
@@ -20,6 +21,7 @@ namespace NexusFrame
         {
             base.Awake();
             MainCamera = Camera.main;
+            MainCameraTransform = MainCamera.transform;
             _loadedPrerequisiteScenes.Add(SceneType.Preload);
 
             // Preload 씬 로딩 시점에 이미 떠있는 씬들을 content로 등록

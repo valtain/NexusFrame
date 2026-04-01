@@ -1,3 +1,4 @@
+using NexusFrame;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -12,8 +13,11 @@ public class PlayerController : PlayerControllerBase
 
     private Vector3 rawInput;
     private Vector3 input;
-    private Vector3 lookUpDirection;
+    private Vector3 upDirection;
     private Vector3 moveXzVector;
+
+    [SerializeField]
+    private CameraRelativeInputFrameResolver inputFrameResolver = new();
 
 
     private bool isMoving;
@@ -26,13 +30,22 @@ public class PlayerController : PlayerControllerBase
     private void OnEnable()
     {
         ResetParams();
+        inputFrameResolver.Reset();
     }
 
     private void Update()
     {
         var deltaTime = Time.deltaTime;
+        var rawInput_asis = rawInput;
         rawInput = new Vector3(MoveX.Value, 0, MoveZ.Value);
-        Quaternion inputFrame = cachedTransform.rotation;
+
+        bool inputDirectionChanged = Vector3.Dot( rawInput, rawInput_asis) < 0.8f;
+        Quaternion camerRotation = SceneDirector.Instance.MainCameraTransform.rotation;
+        var inputFrame = inputFrameResolver.Update(
+            camerRotation,
+            cachedTransform.rotation * Vector3.up,
+            inputDirectionChanged,
+            deltaTime);
 
         input = inputFrame * rawInput;
         if (input.sqrMagnitude > 1f)
@@ -40,19 +53,19 @@ public class PlayerController : PlayerControllerBase
             input.Normalize();
         }
 
-        lookUpDirection = cachedTransform.up;
+        upDirection = Vector3.up; // world 기준
         var damp = Damper.Damp(1, damping, deltaTime);
 
         // 이동량 계산
         {
             var lastMoveXzVector = moveXzVector;
-            var idealMoveXzVector = input * (Speed * deltaTime);
+            var idealMoveXzVector = input * Speed;
             var moveDamp = damp;
 
-            var isSteepChange = 100f < Vector3.Angle(lastMoveXzVector, idealMoveXzVector);
+            var isBigChange = 100f < Vector3.Angle(lastMoveXzVector, idealMoveXzVector);
 
             moveXzVector =
-                isSteepChange
+                isBigChange
                 ? Vector3.Lerp(lastMoveXzVector, idealMoveXzVector, moveDamp)
                 : Vector3.Slerp(lastMoveXzVector, idealMoveXzVector, moveDamp);
             isMoving = 1.0e-3f < moveXzVector.sqrMagnitude;
@@ -60,28 +73,30 @@ public class PlayerController : PlayerControllerBase
 
         // 이동량 적용
         {
-            characterController.Move(moveXzVector);
+            characterController.Move(moveXzVector*deltaTime);
         }
 
         // 이동량 기반 주시 방향 조정
         if (isMoving)
         {
-            var lookDamp = damp;
-            var lookLast = cachedTransform.rotation;
+            var rotationDamp = damp;
+            var rotationLast = cachedTransform.rotation;
+
+            // Player 기준
             var inputForward = inputFrame * Vector3.forward;
             var isBackwardMove = Vector3.Dot(inputForward, moveXzVector) < 0f;
-            var idealLook = Quaternion.LookRotation(
+            var idealRotation = Quaternion.LookRotation(
                 isBackwardMove ? -moveXzVector: moveXzVector,
-                lookUpDirection);
+                upDirection);
 
-            var look = Quaternion.Slerp(lookLast, idealLook, lookDamp);
-            cachedTransform.rotation = look;
+            var rotation = Quaternion.Slerp(rotationLast, idealRotation, rotationDamp);
+            cachedTransform.rotation = rotation;
         }
     }
 
     private void ResetParams()
     {
-        lookUpDirection = Vector3.up;
+        upDirection = Vector3.up;
         moveXzVector = Vector3.zero;
         input = Vector3.zero;
         rawInput = Vector3.zero;
