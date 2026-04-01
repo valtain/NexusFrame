@@ -6722,8 +6722,9 @@ GameObject:
   - component: {fileID: 4265786932554998222}
   - component: {fileID: 4265786932554998220}
   - component: {fileID: 4265786932562089107}
-  - component: {fileID: 4265786932562089109}
   - component: {fileID: 4265786932562089111}
+  - component: {fileID: 4265786932562089109}
+  - component: {fileID: 4265786932562089113}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -6938,6 +6939,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &4265786932562089113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4265786932562089106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b154859947ff354cbf301f63bcac32b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
+  <Animator>k__BackingField: {fileID: 4265786932552574750}
 --- !u!1 &4265786932562089114
 GameObject:
   m_ObjectHideFlags: 0
