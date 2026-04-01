@@ -1,6 +1,11 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using NexusFrame;
+using Cysharp.Threading.Tasks;
+
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -23,6 +28,8 @@ public class MainMenuController : MonoBehaviour
         continueButton.onClick.AddListener(OnContinue);
         settingsButton.onClick.AddListener(OnSettings);
         quitButton.onClick.AddListener(OnQuit);
+
+        continueButton.interactable = false;
     }
 
     /// <summary>
@@ -128,6 +135,7 @@ public class MainMenuController : MonoBehaviour
         // TODO: 게임 데이터 초기화 후 게임 씬으로 전환
         Debug.Log("New Game");
         // SceneManager.LoadScene("GameScene");
+        SceneDirector.LoadScene("World0").Forget();
     }
 
     private void OnContinue()
