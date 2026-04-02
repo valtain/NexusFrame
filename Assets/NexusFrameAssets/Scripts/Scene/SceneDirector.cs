@@ -42,9 +42,10 @@ namespace NexusFrame
         public static async UniTask LoadScene(string sceneName)
         {
             Debug.Assert(!string.IsNullOrEmpty(sceneName));
-
             await EnsurePreloadReady();
+            await TransitionUi.Instance.Begin(TransitionEffectType.Fade);
             await Instance.LoadSceneInternal(sceneName);
+            await TransitionUi.Instance.End();
         }
 
         public static async UniTask EnsurePreloadReady()
@@ -53,7 +54,6 @@ namespace NexusFrame
             {
                 return;
             }
-
             await SceneManager.LoadSceneAsync(SceneUtils.PreloadSceneName, LoadSceneMode.Additive);
             await UniTask.WaitUntil(() => HasInstance);
         }
