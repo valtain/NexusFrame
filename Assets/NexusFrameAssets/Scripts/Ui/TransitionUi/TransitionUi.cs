@@ -29,6 +29,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
     protected override void Awake()
     {
         base.Awake();
+        _root.SetActive(false);
         __addEffect(new InstantTransitionEffect());
         __addEffect(new FadeTransitionEffect());
         void __addEffect(ITransitionEffect effect) => _transitionMap.Add(effect.Type, effect);
@@ -42,6 +43,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
             return;
         }
 
+        _root.SetActive(true);
         _activeEffect = GetTransitionEffect(type);
         if (_isPendingForEnd)
         {
@@ -68,6 +70,10 @@ public class TransitionUi : MonoPreload<TransitionUi>
         if (_activeEffect != null) // End 처리 중에 추가된 transition
         {
             _activeEffect.Begin(_backgroundOverlay).Forget();
+        }
+        else
+        {
+            _root.SetActive(false);
         }
         _isPendingForEnd = false;
     }
