@@ -2,6 +2,14 @@ using NexusFrame;
 using Unity.Cinemachine;
 using UnityEngine;
 
+/// <summary>
+/// <see cref="PlayerControllerBase"/>의 기본 구현 클래스. 지상 환경에서의 이동·회전을 처리한다.
+/// <para>
+/// - 입력 값을 카메라 상대 좌표계로 변환(<c>CameraRelativeInputFrameResolver</c>)하여 이동 방향을 결정한다.
+/// - <see cref="CharacterController"/>로 실제 이동을 적용하며, Slerp/Lerp 댐핑으로 움직임을 부드럽게 처리한다.
+/// - 이동 방향 기반으로 캐릭터 회전을 갱신하며, 후진 입력 시 자동으로 반전 회전을 적용한다.
+/// </para>
+/// </summary>
 public class PlayerController : PlayerControllerBase
 {
     public override bool IsMoving => isMoving;
@@ -14,6 +22,7 @@ public class PlayerController : PlayerControllerBase
     private Vector3 rawInput;
     private Vector3 input;
     private Vector3 moveXzVector;
+    private Vector3 upDirection; // Jump
 
     [SerializeField]
     private CameraRelativeInputFrameResolver inputFrameResolver = new();

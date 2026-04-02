@@ -2,6 +2,16 @@ using Unity.Cinemachine;
 using UnityEngine;
 
 [System.Serializable]
+/// <summary>
+/// 카메라 회전을 기반으로 플레이어 입력 좌표계(frame)를 계산하는 클래스.
+/// <para>
+/// - 카메라가 기울어져 있어도 플레이어 Up 벡터에 맞게 입력 좌표계를 보정하여,
+///   이동 방향이 항상 지면 기준으로 올바르게 적용되도록 한다.
+/// - 카메라가 상/하 반구를 넘나드는 경우(예: 캐릭터 머리 위에서 아래로 내려다보는 시점),
+///   <c>_blendTime</c> 동안 두 반구의 frame을 Slerp 블렌딩하여 급격한 이동 방향 전환을 방지한다.
+/// - 입력 방향이 바뀌면 블렌딩 타이머를 즉시 만료시켜 현재 반구 frame을 바로 사용한다.
+/// </para>
+/// </summary>
 public class CameraRelativeInputFrameResolver
 {
     // --- 설정 ---

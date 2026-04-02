@@ -5,6 +5,16 @@ using UnityEngine.SceneManagement;
 
 namespace NexusFrame
 {
+    /// <summary>
+    /// 씬 로딩/언로딩의 진입점을 제공하는 싱글톤 씬 관리자.
+    /// <para>
+    /// - <see cref="LoadScene"/>을 통해 콘텐츠 씬을 전환하며, 전환 전후로 <see cref="TransitionUi"/> 효과를 자동 적용한다.
+    /// - 콘텐츠 씬(<c>_loadedContentScenes</c>)과 선행 씬(<c>_loadedPrerequisiteScenes</c>)을 별도로 추적한다.
+    /// - 새 씬 로딩 시 <see cref="SceneUtils.GetPrerequisiteScenes"/>로 필요한 선행 씬을 자동으로 추가 로드한다.
+    /// - GamePlay 씬 내부의 씬 전환은 별도 관리자에서 담당할 예정이므로, 이 클래스에서는 관리하지 않는다.
+    /// - <see cref="EnsurePreloadReady"/>를 통해 Preload 씬이 없는 상태에서도 안전하게 진입 가능하다.
+    /// </para>
+    /// </summary>
     public class SceneDirector : MonoPreload<SceneDirector>
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
