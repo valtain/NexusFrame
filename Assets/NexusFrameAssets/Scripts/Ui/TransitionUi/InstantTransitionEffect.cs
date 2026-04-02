@@ -17,6 +17,9 @@ public class InstantTransitionEffect : ITransitionEffect
 
     public async UniTask End()
     {
-        _backgroundOverlay
+        var color = _backgroundOverlay.color;
+        color.a = 0.0f;
+        _backgroundOverlay.color = color;
+        _backgroundOverlay.gameObject.SetActive(false);
     }
 }
