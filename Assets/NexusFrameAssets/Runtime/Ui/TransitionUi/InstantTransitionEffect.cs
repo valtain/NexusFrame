@@ -1,6 +1,8 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine.UI;
 
+namespace NexusFrame
+{
 public class InstantTransitionEffect : ITransitionEffect
 {
     public TransitionEffectType Type => TransitionEffectType.Instant;
@@ -22,4 +24,5 @@ public class InstantTransitionEffect : ITransitionEffect
         _backgroundOverlay.color = color;
         _backgroundOverlay.gameObject.SetActive(false);
     }
+}
 }

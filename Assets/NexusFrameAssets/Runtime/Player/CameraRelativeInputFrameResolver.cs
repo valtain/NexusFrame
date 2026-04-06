@@ -1,7 +1,8 @@
 using Unity.Cinemachine;
 using UnityEngine;
 
-[System.Serializable]
+namespace NexusFrame
+{
 /// <summary>
 /// 카메라 회전을 기반으로 플레이어 입력 좌표계(frame)를 계산하는 클래스.
 /// <para>
@@ -12,6 +13,7 @@ using UnityEngine;
 /// - 입력 방향이 바뀌면 블렌딩 타이머를 즉시 만료시켜 현재 반구 frame을 바로 사용한다.
 /// </para>
 /// </summary>
+[System.Serializable]
 public class CameraRelativeInputFrameResolver
 {
     // --- 설정 ---
@@ -107,4 +109,5 @@ public class CameraRelativeInputFrameResolver
             ? Quaternion.Slerp(frameBottom, frameTop,    t)
             : Quaternion.Slerp(frameTop,    frameBottom, t);
     }
+}
 }

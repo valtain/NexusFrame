@@ -1,7 +1,8 @@
-using NexusFrame;
 using Unity.Cinemachine;
 using UnityEngine;
 
+namespace NexusFrame
+{
 /// <summary>
 /// <see cref="PlayerControllerBase"/>의 기본 구현 클래스. 지상 환경에서의 이동·회전을 처리한다.
 /// <para>
@@ -118,5 +119,5 @@ public class PlayerController : PlayerControllerBase
         rawInput = Vector3.zero;
         isMoving = false;
     }
-
+}
 }

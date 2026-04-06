@@ -3,6 +3,8 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Events;
 
+namespace NexusFrame
+{
 /// <summary>
 /// 플레이어 컨트롤러의 공통 입력 정의와 인터페이스 계약을 담당하는 추상 기반 클래스.
 /// <para>
@@ -57,4 +59,5 @@ public abstract class PlayerControllerBase : MonoBehaviour, IInputAxisOwner
     }
 
     public abstract bool IsMoving {get;}
+}
 }

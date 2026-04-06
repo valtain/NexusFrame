@@ -2,6 +2,8 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
+namespace NexusFrame
+{
 public class FadeTransitionEffect : ITransitionEffect
 {
     public TransitionEffectType Type => TransitionEffectType.Fade;
@@ -51,5 +53,5 @@ public class FadeTransitionEffect : ITransitionEffect
         color.a = alpha;
         _backgroundOverlay.color = color;
     }
-
+}
 }

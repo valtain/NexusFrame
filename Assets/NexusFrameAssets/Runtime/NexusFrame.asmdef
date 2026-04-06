@@ -1,6 +1,6 @@
 {
-    "name": "unknown.nexus-frame",
-    "rootNamespace": "",
+    "name": "NexusFrame",
+    "rootNamespace": "NexusFrame",
     "references": [
         "UniTask",
         "Unity.Cinemachine"

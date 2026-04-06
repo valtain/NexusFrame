@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace NexusFrame
+{
 /// <summary>
 /// 플레이어 오브젝트의 실제 위치 변화를 기반으로 애니메이션 파라미터를 구동하는 컴포넌트.
 /// <para>
@@ -60,4 +62,5 @@ public class PlayerAnimator : MonoBehaviour
         Animator.SetFloat("Speed", _animParams.Direction.z);
         Animator.SetFloat("Direction", _animParams.Direction.x);
     }
+}
 }

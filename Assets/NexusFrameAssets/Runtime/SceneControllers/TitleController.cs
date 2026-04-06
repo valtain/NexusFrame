@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
-using NexusFrame;
-
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
+namespace NexusFrame
+{
 public class TitleController : MonoBehaviour
 {
     [Header("UI References")]
@@ -118,4 +118,5 @@ public class TitleController : MonoBehaviour
         await UniTask.Delay(200);
         SceneDirector.LoadScene("MainMenu").Forget();
     }
+}
 }

@@ -1,12 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
-using NexusFrame;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
+namespace NexusFrame
+{
 public class SplashController : MonoBehaviour
 {
     [Header("Timing")]
@@ -104,4 +105,5 @@ public class SplashController : MonoBehaviour
         }
         canvasGroup.alpha = to;
     }
+}
 }

@@ -1,15 +1,14 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using NexusFrame;
 using Cysharp.Threading.Tasks;
-
-
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
+namespace NexusFrame
+{
 public class MainMenuController : MonoBehaviour
 {
     [Header("UI References")]
@@ -158,4 +157,5 @@ public class MainMenuController : MonoBehaviour
         Application.Quit();
 #endif
     }
+}
 }
