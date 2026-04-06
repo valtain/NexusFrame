@@ -21,14 +21,17 @@ public class TransitionUi : MonoPreload<TransitionUi>
     [SerializeField]
     private GameObject _root = default;
     public int TransitionCount { get; private set; }
+    static public bool IsTransitioning => HasInstance && (Instance.TransitionCount > 0 || Instance._isPendingForEnd);
 
     private ITransitionEffect _activeEffect = default;
     private Dictionary<TransitionEffectType, ITransitionEffect> _transitionMap = new();
     private bool _isPendingForEnd = false;
+    private System.Threading.CancellationToken _lifetimeToken;
 
     protected override void Awake()
     {
         base.Awake();
+        _lifetimeToken = this.GetCancellationTokenOnDestroy();
         _root.SetActive(false);
         __addEffect(new InstantTransitionEffect());
         __addEffect(new FadeTransitionEffect());
@@ -51,7 +54,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
             // Effect 전환이 발생하므로 별개 처리가 필요할 수 있음.
             return;
         }
-        await _activeEffect.Begin(_backgroundOverlay);
+        await _activeEffect.Begin(_backgroundOverlay, _lifetimeToken);
     }
 
     public async UniTask End()
@@ -66,10 +69,15 @@ public class TransitionUi : MonoPreload<TransitionUi>
         var activeEffectBackup = _activeEffect;
         _activeEffect = null;
 
-        await activeEffectBackup.End();
+        await activeEffectBackup.End(_lifetimeToken);
+        if (HasInstance == false)
+        {
+            return;
+        }
+
         if (_activeEffect != null) // End 처리 중에 추가된 transition
         {
-            _activeEffect.Begin(_backgroundOverlay).Forget();
+            _activeEffect.Begin(_backgroundOverlay, _lifetimeToken).Forget();
         }
         else
         {

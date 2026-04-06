@@ -12,7 +12,7 @@ namespace NexusFrame
         {
             Instance = null;
             HasInstance = false;
-        } 
+        }
 
         protected virtual void Awake()
         {
@@ -27,14 +27,14 @@ namespace NexusFrame
             Debug.Assert(HasInstance);
             ResetInstance();
         }
-        
+
         // Editor 에서 비정상 종료후,
         // 재시작시 Instance 가 초기화 되지 않은 경우 대비.
         // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         // private static void Initialize() => Instance = null;
-        // 그렇지만 Generic class 의 멤버는 RuntimeInitializeOnLoadMethod 사용할 수 없으므로, 
-        // 각 구현 class 에서 직접 호출 필요 
-        // 예를 들면 GameManager 가 있다면 
+        // 그렇지만 Generic class 의 멤버는 RuntimeInitializeOnLoadMethod 사용할 수 없으므로,
+        // 각 구현 class 에서 직접 호출 필요
+        // 예를 들면 GameManager 가 있다면
         // public class GameManager: Preload<GameManager>
         //{
         //     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

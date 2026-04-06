@@ -1,0 +1,20 @@
+{
+    "name": "NexusFrame.Tests.Runtime",
+    "rootNamespace": "NexusFrame.Tests.Runtime",
+    "references": [
+        "NexusFrame",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
