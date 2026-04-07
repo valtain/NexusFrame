@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Cysharp.Threading.Tasks;
 using NexusFrame;
+using NexusFrame.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -46,7 +47,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
             return;
         }
 
-        _root.SetActive(true);
+        _root.SetActiveSafe(true);
         _activeEffect = GetTransitionEffect(type);
         if (_isPendingForEnd)
         {
@@ -60,7 +61,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
     public async UniTask End()
     {
         --TransitionCount;
-        if (1 <= TransitionCount)
+    if (1 <= TransitionCount)
         {
             return;
         }
@@ -81,7 +82,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
         }
         else
         {
-            _root.SetActive(false);
+            _root.SetActiveSafe(false);
         }
         _isPendingForEnd = false;
     }
