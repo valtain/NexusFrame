@@ -21,7 +21,7 @@ namespace NexusFrame
             {
                 if (go != gameObject) go.SetActive(false);
             }
-            SceneDirector.LoadScene(currentSceneName).Forget();
+            SceneDirector.LoadColdStartupScene(currentSceneName).Forget();
 #endif
         }
 

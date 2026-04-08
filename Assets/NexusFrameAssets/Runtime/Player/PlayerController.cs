@@ -13,52 +13,51 @@ namespace NexusFrame
 /// </summary>
 public class PlayerController : PlayerControllerBase
 {
-    public override bool IsMoving => isMoving;
+    public override bool IsMoving => _isMoving;
 
     [SerializeField]
     private CharacterController characterController;
 
-    private Transform cachedTransform;
+    private Transform _cachedTransform;
 
-    private Vector3 rawInput;
-    private Vector3 input;
-    private Vector3 moveXzVector;
-    private Vector3 upDirection; // Jump
+    private Vector3 _rawInput;
+    private Vector3 _input;
+    private Vector3 _moveXzVector;
 
     [SerializeField]
-    private CameraRelativeInputFrameResolver inputFrameResolver = new();
+    private CameraRelativeInputFrameResolver _inputFrameResolver = new();
 
-    private bool isMoving;
+    private bool _isMoving;
 
     private void Awake()
     {
-        cachedTransform = this.transform;
+        _cachedTransform = this.transform;
     }
 
     private void OnEnable()
     {
         ResetParams();
-        inputFrameResolver.Reset();
+        _inputFrameResolver.Reset();
     }
 
     private void Update()
     {
         var deltaTime = Time.deltaTime;
-        var rawInput_asis = rawInput;
-        rawInput = new Vector3(MoveX.Value, 0, MoveZ.Value);
+        var previousRawInput = _rawInput;
+        _rawInput = new Vector3(MoveX.Value, 0, MoveZ.Value);
 
-        bool inputDirectionChanged = Vector3.Dot(rawInput, rawInput_asis) < 0.8f;
-        Quaternion camerRotation = SceneDirector.Instance.MainCameraTransform.rotation;
-        var inputFrame = inputFrameResolver.Update(
-            camerRotation,
-            cachedTransform.rotation * Vector3.up,
+        bool inputDirectionChanged = Vector3.Dot(_rawInput, previousRawInput) < 0.8f;
+        Quaternion cameraRotation = SceneDirector.Instance.MainCameraTransform.rotation;
+        var inputFrame = _inputFrameResolver.Update(
+            cameraRotation,
+            _cachedTransform.rotation * Vector3.up,
             inputDirectionChanged,
             deltaTime);
 
-        input = inputFrame * rawInput;
-        if (input.sqrMagnitude > 1f)
+        _input = inputFrame * _rawInput;
+        if (_input.sqrMagnitude > 1f)
         {
-            input.Normalize();
+            _input.Normalize();
         }
 
         var damp = Damper.Damp(1, damping, deltaTime);
@@ -66,11 +65,11 @@ public class PlayerController : PlayerControllerBase
 
         // 이동량 계산
         UpdateMoveXzVector(damp);
-        isMoving = 1.0e-3f < moveXzVector.sqrMagnitude;
+        _isMoving = 1.0e-3f < _moveXzVector.sqrMagnitude;
 
         // 이동량 적용
         {
-            characterController.Move(moveXzVector * deltaTime);
+            characterController.Move(_moveXzVector * deltaTime);
         }
 
         // 이동량 기반 주시 방향 조정
@@ -79,45 +78,42 @@ public class PlayerController : PlayerControllerBase
 
     private void UpdateRotation(Quaternion inputFrame, Vector3 upDirection, float damp)
     {
-        if (!isMoving)
+        if (!_isMoving)
         {
             return;
         }
 
-        var rotationDamp = damp;
-        var rotationLast = cachedTransform.rotation;
+        var rotationLast = _cachedTransform.rotation;
 
         // Player 기준
         var inputForward = inputFrame * Vector3.forward;
-        var isBackwardMove = Vector3.Dot(inputForward, moveXzVector) < 0f;
+        var isBackwardMove = Vector3.Dot(inputForward, _moveXzVector) < 0f;
         var idealRotation = Quaternion.LookRotation(
-            isBackwardMove ? -moveXzVector : moveXzVector,
+            isBackwardMove ? -_moveXzVector : _moveXzVector,
             upDirection);
 
-        var rotation = Quaternion.Slerp(rotationLast, idealRotation, rotationDamp);
-        cachedTransform.rotation = rotation;
+        _cachedTransform.rotation = Quaternion.Slerp(rotationLast, idealRotation, damp);
     }
 
     private void UpdateMoveXzVector(float damp)
     {
-        var lastMoveXzVector = moveXzVector;
-        var idealMoveXzVector = input * Speed;
-        var moveDamp = damp;
+        var lastMoveXzVector = _moveXzVector;
+        var idealMoveXzVector = _input * Speed;
 
         var isBigChange = 100f < Vector3.Angle(lastMoveXzVector, idealMoveXzVector);
 
-        moveXzVector =
+        _moveXzVector =
             isBigChange
-            ? Vector3.Lerp(lastMoveXzVector, idealMoveXzVector, moveDamp)
-            : Vector3.Slerp(lastMoveXzVector, idealMoveXzVector, moveDamp);
+            ? Vector3.Lerp(lastMoveXzVector, idealMoveXzVector, damp)
+            : Vector3.Slerp(lastMoveXzVector, idealMoveXzVector, damp);
     }
 
     private void ResetParams()
     {
-        moveXzVector = Vector3.zero;
-        input = Vector3.zero;
-        rawInput = Vector3.zero;
-        isMoving = false;
+        _moveXzVector = Vector3.zero;
+        _input = Vector3.zero;
+        _rawInput = Vector3.zero;
+        _isMoving = false;
     }
 }
 }

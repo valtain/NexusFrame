@@ -34,9 +34,9 @@ public class TransitionUi : MonoPreload<TransitionUi>
         base.Awake();
         _lifetimeToken = this.GetCancellationTokenOnDestroy();
         _root.SetActive(false);
-        __addEffect(new InstantTransitionEffect());
-        __addEffect(new FadeTransitionEffect());
-        void __addEffect(ITransitionEffect effect) => _transitionMap.Add(effect.Type, effect);
+        addEffect(new InstantTransitionEffect());
+        addEffect(new FadeTransitionEffect());
+        void addEffect(ITransitionEffect effect) => _transitionMap.Add(effect.Type, effect);
     }
 
     public async UniTask Begin(TransitionEffectType type)
@@ -61,7 +61,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
     public async UniTask End()
     {
         --TransitionCount;
-    if (1 <= TransitionCount)
+        if (1 <= TransitionCount)
         {
             return;
         }
@@ -89,10 +89,5 @@ public class TransitionUi : MonoPreload<TransitionUi>
 
     private ITransitionEffect GetTransitionEffect(TransitionEffectType type)
         => _transitionMap[type];
-
-    private string GetDebuggerDisplay()
-    {
-        return ToString();
-    }
 }
 

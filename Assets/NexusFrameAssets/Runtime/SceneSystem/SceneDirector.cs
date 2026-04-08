@@ -40,22 +40,51 @@ namespace NexusFrame
             {
                 var scene = SceneManager.GetSceneAt(i);
                 var sceneType = SceneUtils.GetSceneType(scene.name);
-                if (!SceneUtils.IsPrerequisiteScene(sceneType) && sceneType != SceneType.NaV)
+                if (!SceneUtils.IsPrerequisiteScene(sceneType) && sceneType != SceneType.None)
                 {
                     _loadedContentScenes.Add(scene.name);
                 }
             }
         }
 
-        // ── Public Entry Point ────────────────────────────────────────────
+        // ── Public Entry Points ───────────────────────────────────────────
 
-        public static async UniTask LoadScene(string sceneName)
+        /// <summary>기존 콘텐츠 씬을 언로드하고 새 씬으로 전환한다.</summary>
+        public static async UniTask<Scene> LoadScene(string sceneName)
         {
             Debug.Assert(!string.IsNullOrEmpty(sceneName));
             await EnsurePreloadReady();
-            await TransitionUi.Instance.Begin(TransitionEffectType.Fade);
-            await Instance.LoadSceneInternal(sceneName);
-            await TransitionUi.Instance.End();
+            return await Instance.LoadSceneCore(sceneName, unloadContents: true);
+        }
+
+        /// <summary>기존 콘텐츠 씬을 유지한 채 새 씬을 추가로 로드한다.</summary>
+        public static async UniTask<Scene> LoadSceneAdditive(string sceneName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(sceneName));
+            await EnsurePreloadReady();
+            return await Instance.LoadSceneCore(sceneName, unloadContents: false);
+        }
+
+        public static async UniTask LoadColdStartupScene(string sceneName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(sceneName));
+            var sceneType = SceneUtils.GetSceneType(sceneName);
+
+            if (SceneUtils.IsGamePlayRequired(sceneType) == false)
+            {
+                await LoadScene(sceneName);
+                return;
+            }
+
+            await EnsurePreloadReady();
+            await Instance.LoadGamePlaySceneByColdStartUp(sceneName);
+        }
+
+        public static async UniTask UnloadScene(string sceneName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(sceneName));
+            Debug.Assert(HasInstance == true);
+            await Instance.UnloadSceneCore(sceneName);
         }
 
         public static async UniTask EnsurePreloadReady()
@@ -70,22 +99,45 @@ namespace NexusFrame
 
         // ── Internal ──────────────────────────────────────────────────────
 
-        private async UniTask LoadSceneInternal(string sceneName)
+        private async UniTask<Scene> LoadSceneCore(string sceneName, bool unloadContents)
         {
             var sceneType = SceneUtils.GetSceneType(sceneName);
-            Debug.Assert(sceneType != SceneType.NaV, $"SceneType not found: {sceneName}");
+            Debug.Assert(sceneType != SceneType.None, $"SceneType not found: {sceneName}");
             Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be loaded directly: {sceneName}");
 
-            bool isGamePlayAlreadyLoaded = _loadedPrerequisiteScenes.Contains(SceneType.GamePlay);
-
+            await TransitionUi.Instance.Begin(TransitionEffectType.Fade);
             await EnsurePrerequisitesLoaded(sceneType);
-            if (!isGamePlayAlreadyLoaded)
+            if (unloadContents)
             {
                 await UnloadContentScenes();
             }
-
             _loadedContentScenes.Add(sceneName);
             await SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            var loadedScene = SceneManager.GetSceneByName(sceneName);
+            await TransitionUi.Instance.End();
+            return loadedScene;
+        }
+
+        private async UniTask LoadGamePlaySceneByColdStartUp(string sceneName)
+        {
+            var sceneType = SceneUtils.GetSceneType(sceneName);
+            await TransitionUi.Instance.Begin(TransitionEffectType.Fade);
+            await UnloadContentScenes();
+            await EnsurePrerequisitesLoaded(sceneType);
+            await GamePlaySystem.Instance.LaunchSessionAtColdStartup(sceneName);
+            await TransitionUi.Instance.End();
+        }
+
+        private async UniTask UnloadSceneCore(string sceneName)
+        {
+            var sceneType = SceneUtils.GetSceneType(sceneName);
+            Debug.Assert(sceneType != SceneType.None, $"SceneType not found: {sceneName}");
+            Debug.Assert(_loadedContentScenes.Contains(sceneName), $"Scene is not loaded: {sceneName}");
+            Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be unloaded directly: {sceneName}");
+            await TransitionUi.Instance.Begin(TransitionEffectType.Fade);
+            _loadedContentScenes.Remove(sceneName);
+            await SceneManager.UnloadSceneAsync(sceneName);
+            await TransitionUi.Instance.End();
         }
 
         private async UniTask EnsurePrerequisitesLoaded(SceneType sceneType)
@@ -129,7 +181,7 @@ namespace NexusFrame
 
             var sceneType = SceneUtils.GetSceneType(sceneName);
             var prerequisiteScenes = SceneUtils.GetPrerequisiteScenes(sceneType);
-            foreach(var scene in prerequisiteScenes)
+            foreach (var scene in prerequisiteScenes)
             {
                 if (Instance._loadedPrerequisiteScenes.Contains(scene) == false)
                 {

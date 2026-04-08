@@ -2,10 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 namespace NexusFrame
 {
 public class SplashController : MonoBehaviour
@@ -28,6 +24,7 @@ public class SplashController : MonoBehaviour
         SplashSequence().Forget();
     }
 
+#if UNITY_EDITOR
     /// <summary>
     /// Inspector 우클릭 > "Create UI" 로 에디터에서 UI 계층을 생성합니다.
     /// </summary>
@@ -38,11 +35,7 @@ public class SplashController : MonoBehaviour
         var existing = GetComponentInChildren<Canvas>();
         if (existing != null)
         {
-#if UNITY_EDITOR
             DestroyImmediate(existing.gameObject);
-#else
-            Destroy(existing.gameObject);
-#endif
         }
 
         // Canvas
@@ -81,10 +74,9 @@ public class SplashController : MonoBehaviour
         canvasGroup = canvas.gameObject.AddComponent<CanvasGroup>();
         canvasGroup.alpha = 0f;
 
-#if UNITY_EDITOR
-        EditorUtility.SetDirty(this);
-#endif
+        UnityEditor.EditorUtility.SetDirty(this);
     }
+#endif
 
     private async UniTaskVoid SplashSequence()
     {

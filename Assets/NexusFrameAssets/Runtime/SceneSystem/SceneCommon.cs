@@ -5,7 +5,7 @@ namespace NexusFrame
 {
     public enum SceneType
     {
-        NaV = -1,
+        None = -1,
         Preload = 0, // 자동으로 로딩되는 씬
         Splash, // 이후 Preload 씬이 필요
         Title,
@@ -34,7 +34,7 @@ namespace NexusFrame
         public static SceneType GetSceneType(string sceneName)
         {
             return string.IsNullOrEmpty(sceneName)
-                ? SceneType.NaV
+                ? SceneType.None
                 : SceneTypeDic.GetValueOrDefault(sceneName, SceneType.Test);
         }
 
@@ -45,6 +45,9 @@ namespace NexusFrame
                 (int)sceneType > (int)SceneType.Preload ? _preloadRequisiteScenes :
                 _noRequisiteScenes;
         }
+
+        public static bool IsGamePlayRequired(SceneType sceneType)
+            => (int)sceneType > (int)SceneType.GamePlay;
 
         public static string GetSpecialSceneName(SceneType sceneType)
         {

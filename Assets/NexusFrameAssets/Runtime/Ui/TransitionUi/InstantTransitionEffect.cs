@@ -21,7 +21,7 @@ public class InstantTransitionEffect : ITransitionEffect
         var color = _backgroundOverlay.color;
         color.a = 1.0f;
         _backgroundOverlay.color = color;
-        await UniTask.NextFrame();
+        await UniTask.Yield();
     }
 
     public async UniTask End(CancellationToken ct = default)
@@ -34,7 +34,7 @@ public class InstantTransitionEffect : ITransitionEffect
         color.a = 0.0f;
         _backgroundOverlay.color = color;
         _backgroundOverlay.gameObject.SetActive(false);
-        await UniTask.NextFrame();
+        await UniTask.Yield();
     }
 }
 }
