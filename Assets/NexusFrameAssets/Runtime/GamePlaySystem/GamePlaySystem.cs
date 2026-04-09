@@ -35,6 +35,9 @@ namespace NexusFrame
                 LaunchNewSessionCore(sessionType, switchType, GetStage(stageDesc), transitionEffectType).Forget();
         }
 
+        public void PopSession(TransitionEffectType transitionEffectType)
+            => PopSessionCore(transitionEffectType).Forget();
+
         public void LaunchSession(PlaySessionSwitch switchType, TransitionEffectType transitionEffectType)
         {
             Debug.Assert(switchType == PlaySessionSwitch.Pop, "This overload is for Pop only.");
