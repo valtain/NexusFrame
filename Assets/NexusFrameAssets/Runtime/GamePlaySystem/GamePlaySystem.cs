@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -16,33 +17,45 @@ namespace NexusFrame
         public long SessionStackUpdateTick {get; private set;}
 
         public Action OnSessionStackUpdatedForEditor { get; private set; } = null; // Editor 에서만 사용
-        public void SetSessionStackUpdateCallback(Action callback) => OnSessionStackUpdatedForEditor = callback;
+
+        public void SetSessionStackUpdateCallback(Action callback)
+        {
+#if UNITY_EDITOR
+            OnSessionStackUpdatedForEditor = callback;
+#endif
+        }
 
         private Stack<PlaySessionBase> _sessionStack = new();
 
         public void LaunchSession(PlaySessionType sessionType, PlaySessionSwitch switchType, GameStageDesc stageDesc, TransitionEffectType transitionEffectType)
-            => LaunchSessionCore(sessionType, switchType, GetStage(stageDesc), transitionEffectType).Forget();
+        {
+            if (switchType == PlaySessionSwitch.Pop)
+                PopSessionCore(transitionEffectType).Forget();
+            else
+                LaunchNewSessionCore(sessionType, switchType, GetStage(stageDesc), transitionEffectType).Forget();
+        }
+
+        public void LaunchSession(PlaySessionSwitch switchType, TransitionEffectType transitionEffectType)
+        {
+            Debug.Assert(switchType == PlaySessionSwitch.Pop, "This overload is for Pop only.");
+            Debug.Assert(2 <= _sessionStack.Count);
+            PopSessionCore(transitionEffectType).Forget();
+        }
 
         public UniTask LaunchSessionAtColdStartup(string sceneName)
         {
             var stageDesc = new GameStageDesc(GameStageType.Level, sceneName, false);
-            return LaunchSessionCore(
+            return LaunchNewSessionCore(
                 PlaySessionType.Exploration,
                 PlaySessionSwitch.Replace,
                 GetStage(stageDesc),
                 TransitionEffectType.Fade);
         }
 
-        private async UniTask LaunchSessionCore(PlaySessionType sessionType, PlaySessionSwitch switchType, GameStageBase stage, TransitionEffectType transitionEffectType)
+        private async UniTask LaunchNewSessionCore(PlaySessionType sessionType, PlaySessionSwitch switchType, GameStageBase stage, TransitionEffectType transitionEffectType)
         {
             Debug.Assert(switchType != PlaySessionSwitch.None);
-
-            if (switchType == PlaySessionSwitch.Pop)
-            {
-                Debug.Assert(2 <= _sessionStack.Count);
-                await PopSessionCore(transitionEffectType);
-                return;
-            }
+            Debug.Assert(switchType != PlaySessionSwitch.Pop);
 
             PlaySessionBase session = GetSession(sessionType);
             GameStageBase backgroundStage = 0 < _sessionStack.Count ? _sessionStack.Peek().Stage : null;
@@ -67,15 +80,16 @@ namespace NexusFrame
             PlaySessionBase nextSession = null;
 
             await prevSession.EnterSessionOut();
-            {
-                await TransitionUi.Instance.Begin(transitionEffectType);
-                await RemovePrevSessions(removeAll: false);
-                await Resources.UnloadUnusedAssets();
-                nextSession = _sessionStack.Peek();
 
-                await nextSession.EnterResumed();
-                await TransitionUi.Instance.End();
-            }
+            // --- transition ---
+            await TransitionUi.Instance.Begin(transitionEffectType);
+            await RemovePrevSessions(removeAll: false);
+            await Resources.UnloadUnusedAssets();
+            nextSession = _sessionStack.Peek();
+            await nextSession.EnterResumed();
+            await TransitionUi.Instance.End();
+            // ------------------
+
             await nextSession.EnterSessionIn();
         }
 
@@ -86,7 +100,9 @@ namespace NexusFrame
                 await prevSession.EnterSessionOut();
                 await TransitionUi.Instance.Begin(transitionEffectType);
 
-                var removeAllPrevSessions = nextSession.Stage.StageType == GameStageType.Level; // 기본 Level 은 하나만...
+                // Level(Main Level)은 항상 하나만 존재한다.
+                // 다른 세션들이 현재 Main Level에 의존할 가능성이 높으므로, Level 전환 시 스택 전체를 제거한다.
+                var removeAllPrevSessions = nextSession.Stage.StageType == GameStageType.Level;
                 await RemovePrevSessions(removeAllPrevSessions);
                 await Resources.UnloadUnusedAssets();
             }
@@ -212,22 +228,18 @@ namespace NexusFrame
         {
             foreach (var session in _sessionStack)
             {
-                if (!(session.Stage?.SubStages is { } subStages))
-                {
-                    continue;
-                }
-                foreach (var subStage in subStages)
-                {
-                    if (subStage is SubLevelStage subLevelStage &&
-                        subLevelStage.Id == stageUri)
-                    {
-                        return subLevelStage;
-                    }
-                }
+                var found = session.Stage?.SubStages?
+                    .OfType<SubLevelStage>()
+                    .FirstOrDefault(s => s.Id == stageUri);
+                if (found != null) return found;
             }
             return null;
         }
 
-        internal void RegisterAnchorOnce(GameStageAnchorBase anchor) => CurrentSession.Stage.RegisterAnchor(anchor);
+        internal void RegisterAnchorOnce(GameStageAnchorBase anchor)
+        {
+            Debug.Assert(CurrentSession != null, "RegisterAnchorOnce called with no active session.");
+            CurrentSession.Stage.RegisterAnchor(anchor);
+        }
     }
 }
