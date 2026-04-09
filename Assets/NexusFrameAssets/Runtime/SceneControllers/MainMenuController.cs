@@ -133,8 +133,11 @@ public class MainMenuController : MonoBehaviour
     {
         // TODO: 게임 데이터 초기화 후 게임 씬으로 전환
         Debug.Log("New Game");
-        // SceneManager.LoadScene("GameScene");
-        SceneDirector.LoadScene("World0").Forget();
+        GamePlaySystem.LaunchSession(
+            PlaySessionType.Exploration,
+            PlaySessionSwitch.Replace,
+            new GameStageDesc(GameStageType.Level, "World0", false),
+            TransitionEffectType.Fade);
     }
 
     private void OnContinue()

@@ -22,7 +22,7 @@ namespace NexusFrame
             Debug.Assert(_sessionType != PlaySessionType.None, "Invalid session type in portal.");
             Debug.Log($"[NaivePortal] Triggered by {other.name}, launching {_sessionType} to {_stageDesc.AssetPath} with {_transitionType}.");
 
-            GamePlaySystem.Instance.LaunchSession(
+            GamePlaySystem.LaunchSession(
                 _sessionType,
                 _sessionSwitch,
                 _stageDesc,

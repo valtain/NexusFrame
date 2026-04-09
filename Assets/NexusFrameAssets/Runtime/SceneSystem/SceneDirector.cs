@@ -8,7 +8,7 @@ namespace NexusFrame
     /// <summary>
     /// 씬 로딩/언로딩의 진입점을 제공하는 싱글톤 씬 관리자.
     /// <para>
-    /// - <see cref="LoadScene"/>을 통해 콘텐츠 씬을 전환하며, 전환 전후로 <see cref="TransitionUi"/> 효과를 자동 적용한다.
+    /// - <see cref="LoadScene"/>을 통해 콘텐츠 씬을 전환하며, 전환 전후로 <see cref="Transition"/> 효과를 자동 적용한다.
     /// - 콘텐츠 씬(<c>_loadedContentScenes</c>)과 선행 씬(<c>_loadedPrerequisiteScenes</c>)을 별도로 추적한다.
     /// - 새 씬 로딩 시 <see cref="SceneUtils.GetPrerequisiteScenes"/>로 필요한 선행 씬을 자동으로 추가 로드한다.
     /// - GamePlay 씬 내부의 씬 전환은 별도 관리자에서 담당할 예정이므로, 이 클래스에서는 관리하지 않는다.
@@ -97,6 +97,18 @@ namespace NexusFrame
             await UniTask.WaitUntil(() => HasInstance);
         }
 
+        public static async UniTask EnsureGamePlayReady()
+        {
+            await EnsurePreloadReady();
+            if (GamePlaySystem.HasInstance)
+            {
+                return;
+            }
+            _ = Instance._loadedPrerequisiteScenes.Add(SceneType.GamePlay);
+            await SceneManager.LoadSceneAsync(SceneUtils.GamePlaySceneName, LoadSceneMode.Additive);
+            await UniTask.WaitUntil(() => GamePlaySystem.HasInstance);
+        }
+
         // ── Internal ──────────────────────────────────────────────────────
 
         private async UniTask<Scene> LoadSceneCore(string sceneName, bool unloadContents)
@@ -106,7 +118,7 @@ namespace NexusFrame
             Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be loaded directly: {sceneName}");
 
             Scene loadedScene;
-            await using (await TransitionUi.Instance.Scope(TransitionEffectType.Fade))
+            await using (await Transition.Instance.Scope(TransitionEffectType.Fade))
             {
                 await EnsurePrerequisitesLoaded(sceneType);
                 if (unloadContents)
@@ -123,11 +135,11 @@ namespace NexusFrame
         private async UniTask LoadGamePlaySceneByColdStartUp(string sceneName)
         {
             var sceneType = SceneUtils.GetSceneType(sceneName);
-            await using (await TransitionUi.Instance.Scope(TransitionEffectType.Fade))
+            await using (await Transition.Instance.Scope(TransitionEffectType.Fade))
             {
                 await UnloadContentScenes();
                 await EnsurePrerequisitesLoaded(sceneType);
-                await GamePlaySystem.Instance.LaunchSessionAtColdStartup(sceneName);
+                await GamePlaySystem.LaunchSessionAtColdStartup(sceneName);
             }
         }
 
@@ -137,7 +149,7 @@ namespace NexusFrame
             Debug.Assert(sceneType != SceneType.None, $"SceneType not found: {sceneName}");
             Debug.Assert(_loadedContentScenes.Contains(sceneName), $"Scene is not loaded: {sceneName}");
             Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be unloaded directly: {sceneName}");
-            await using (await TransitionUi.Instance.Scope(TransitionEffectType.Fade))
+            await using (await Transition.Instance.Scope(TransitionEffectType.Fade))
             {
                 _loadedContentScenes.Remove(sceneName);
                 await SceneManager.UnloadSceneAsync(sceneName);

@@ -21,9 +21,9 @@ namespace NexusFrame.Tests.Runtime
         {
             // 씬 언로드 전 진행 중인 페이드 효과 완료 대기
             // TransitionUi.End()의 페이드 아웃이 끝나기 전에 언로드하면 Graphic 접근 에러 발생
-            //Debug.Log($"[TearDown] Enter: Transition is active -> {TransitionUi.IsTransitioning}");
-            yield return new WaitUntil(() => !TransitionUi.IsTransitioning);
-            //Debug.Log($"Transition is active -> {TransitionUi.IsTransitioning}");
+            //Debug.Log($"[TearDown] Enter: Transition is active -> {Transition.IsTransitioning}");
+            yield return new WaitUntil(() => !Transition.IsTransitioning);
+            //Debug.Log($"Transition is active -> {Transition.IsTransitioning}");
 
             // 언로드 순서: 콘텐츠 씬 → 전제 조건 씬(GamePlay → Preload)
             // Preload를 먼저 언로드하면 싱글톤이 사라져 이후 씬 언로드 중 에러 발생
