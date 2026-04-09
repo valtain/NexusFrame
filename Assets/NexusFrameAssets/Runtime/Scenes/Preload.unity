@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 9764185}
   - component: {fileID: 9764184}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: UiRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -602,7 +602,7 @@ GameObject:
   - component: {fileID: 1827272323}
   - component: {fileID: 1827272322}
   m_Layer: 0
-  m_Name: TransitionUi
+  m_Name: Transition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -617,7 +617,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1827272321}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a8cc919f92987b46adf4e5fe6a4ac08, type: 3}
+  m_Script: {fileID: 11500000, guid: 311f785c3d83e374eb38a3a8c1001a24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TransitionUi
   _backgroundOverlay: {fileID: 464085174}

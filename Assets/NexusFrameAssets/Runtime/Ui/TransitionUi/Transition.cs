@@ -15,7 +15,7 @@ using UnityEngine.UI;
 /// - End 처리 중 새로운 Begin이 들어오면 End 완료 후 자동으로 해당 Begin 효과를 실행한다.
 /// </para>
 /// </summary>
-public class TransitionUi : MonoPreload<TransitionUi>
+public class Transition : MonoPreload<Transition>
 {
     [SerializeField]
     private Graphic _backgroundOverlay = default;
@@ -98,7 +98,7 @@ public class TransitionUi : MonoPreload<TransitionUi>
 
     public readonly struct TransitionScope
     {
-        public UniTask DisposeAsync() => TransitionUi.Instance.End();
+        public UniTask DisposeAsync() => Transition.Instance.End();
     }
 }
 
