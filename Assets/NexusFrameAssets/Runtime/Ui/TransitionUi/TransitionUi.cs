@@ -87,7 +87,18 @@ public class TransitionUi : MonoPreload<TransitionUi>
         _isPendingForEnd = false;
     }
 
+    public async UniTask<TransitionScope> Scope(TransitionEffectType type)
+    {
+        await Begin(type);
+        return new TransitionScope();
+    }
+
     private ITransitionEffect GetTransitionEffect(TransitionEffectType type)
         => _transitionMap[type];
+
+    public readonly struct TransitionScope
+    {
+        public UniTask DisposeAsync() => TransitionUi.Instance.End();
+    }
 }
 

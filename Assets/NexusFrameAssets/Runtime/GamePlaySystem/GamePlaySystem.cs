@@ -81,14 +81,13 @@ namespace NexusFrame
 
             await prevSession.EnterSessionOut();
 
-            // --- transition ---
-            await TransitionUi.Instance.Begin(transitionEffectType);
-            await RemovePrevSessions(removeAll: false);
-            await Resources.UnloadUnusedAssets();
-            nextSession = _sessionStack.Peek();
-            await nextSession.EnterResumed();
-            await TransitionUi.Instance.End();
-            // ------------------
+            await using (await TransitionUi.Instance.Scope(transitionEffectType))
+            {
+                await RemovePrevSessions(removeAll: false);
+                await Resources.UnloadUnusedAssets();
+                nextSession = _sessionStack.Peek();
+                await nextSession.EnterResumed();
+            }
 
             await nextSession.EnterSessionIn();
         }
@@ -98,22 +97,26 @@ namespace NexusFrame
             if (_sessionStack.TryPeek(out var prevSession))
             {
                 await prevSession.EnterSessionOut();
-                await TransitionUi.Instance.Begin(transitionEffectType);
-
-                // Level(Main Level)은 항상 하나만 존재한다.
-                // 다른 세션들이 현재 Main Level에 의존할 가능성이 높으므로, Level 전환 시 스택 전체를 제거한다.
-                var removeAllPrevSessions = nextSession.Stage.StageType == GameStageType.Level;
-                await RemovePrevSessions(removeAllPrevSessions);
-                await Resources.UnloadUnusedAssets();
+                await using(await TransitionUi.Instance.Scope(transitionEffectType))
+                {
+                    // Level(Main Level)은 항상 하나만 존재한다.
+                    // 다른 세션들이 현재 Main Level에 의존할 가능성이 높으므로, Level 전환 시 스택 전체를 제거한다.
+                    var removeAllPrevSessions = nextSession.Stage.StageType == GameStageType.Level;
+                    await RemovePrevSessions(removeAllPrevSessions);
+                    await Resources.UnloadUnusedAssets();
+                    await PlayNewSession(nextSession);
+                }
+                await nextSession.EnterSessionIn();
             }
             else
             {
-                await TransitionUi.Instance.Begin(transitionEffectType);
+                await using(await TransitionUi.Instance.Scope(transitionEffectType))
+                {
+                    await PlayNewSession(nextSession);
+                }
+                await nextSession.EnterSessionIn();
             }
 
-            await PlayNewSession(nextSession);
-            await TransitionUi.Instance.End();
-            await nextSession.EnterSessionIn();
         }
 
         private async UniTask StackSessionCore(PlaySessionBase nextSession, TransitionEffectType transitionEffectType)
@@ -124,17 +127,18 @@ namespace NexusFrame
 
             await prevSession.EnterSessionOut();
 
-            await TransitionUi.Instance.Begin(transitionEffectType);
-            if (nextSession.Stage.DoOverrideStage)
+            await using (await TransitionUi.Instance.Scope(transitionEffectType))
             {
-                await prevSession.EnterPaused();
+                if (nextSession.Stage.DoOverrideStage)
+                {
+                    await prevSession.EnterPaused();
+                }
+                else
+                {
+                    await prevSession.EnterSlept();
+                }
+                await PlayNewSession(nextSession);
             }
-            else
-            {
-                await prevSession.EnterSlept();
-            }
-            await PlayNewSession(nextSession);
-            await TransitionUi.Instance.End();
 
             await nextSession.EnterSessionIn();
         }
