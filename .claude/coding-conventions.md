@@ -2,11 +2,11 @@
 
 Follows [Unity C# coding standards](https://unity.com/how-to/naming-and-code-style-tips-c-scripting-unity). Rules below take precedence where they differ.
 
+포맷/네이밍의 기계적 규칙(indent, 줄바꿈, `_camelCase` private fields, `I` prefix interfaces, PascalCase 타입 등)은 [`.editorconfig`](../.editorconfig)에서 IDE가 직접 강제한다.
+
 ## Naming
 
-- Private fields: `_camelCase` (underscore prefix, no `m_`)
 - Public inspector-exposed property: `[field: SerializeField]` with `public T Foo { get; private set; } = default;`
-- Interfaces: `I` prefix (`ITransitionEffect`, `IInputAxisOwner`)
 - Async methods that return `UniTask`: descriptive name without mandatory `Async` suffix (e.g., `LoadSceneInternal`, `EnsurePrerequisitesLoaded`)
 
 ## Async
