@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -108,8 +107,8 @@ namespace NexusFrame
             var prevSession = _sessionStack.Peek();
 
             await prevSession.EnterSessionOut();
-            await TransitionUi.Instance.Begin(transitionEffectType);
 
+            await TransitionUi.Instance.Begin(transitionEffectType);
             if (nextSession.Stage.DoOverrideStage)
             {
                 await prevSession.EnterPaused();
@@ -118,11 +117,13 @@ namespace NexusFrame
             {
                 await prevSession.EnterSlept();
             }
-
+            await PlayNewSession(nextSession);
             await TransitionUi.Instance.End();
+
+            await nextSession.EnterSessionIn();
         }
 
-        private async Task PlayNewSession(PlaySessionBase session)
+        private async UniTask PlayNewSession(PlaySessionBase session)
         {
             await session.EnterCreated();
             _sessionStack.Push(session);
@@ -131,7 +132,7 @@ namespace NexusFrame
             await session.EnterPlayed();
         }
 
-        private async Task RemovePrevSessions(bool removeAll)
+        private async UniTask RemovePrevSessions(bool removeAll)
         {
             if (_sessionStack.Count == 0)
             {
