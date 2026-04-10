@@ -1,0 +1,4 @@
+# Unity 에셋 파일을 GitHub 언어 통계에서 제외
+*.asset linguist-detectable=false
+*.unity linguist-detectable=false
+*.prefab linguist-detectable=false
