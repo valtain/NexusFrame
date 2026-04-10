@@ -1,125 +1,163 @@
 # NexusFrame
 
-Unity 게임 클라이언트 개발 경험에서 반복적으로 마주친 구조적 문제들을 직접 해결하기 위해 만든 개인 프레임워크.
+라이브 서비스 개발에서 반복적으로 마주친 구조적 문제들을 직접 풀어보려고 만든 Unity 개인 프레임워크.
 
-> 진행 중인 프로젝트입니다. 현재 씬 관리·플레이어 시스템·전환 구조가 구현되어 있으며, 추가 시스템은 지속 개발 중입니다.
-
----
-
-## 만들게 된 이유
-
-라이브 서비스를 운영하면서 반복적으로 겪은 문제들이 있었다.
-
-- 씬 전환 시 UI가 사라진 뒤 빈 화면이 노출되는 타이밍 문제
-- `DontDestroyOnLoad` 남용으로 Singleton 생명주기와 초기화 순서가 불투명해지는 문제
-- 카메라가 플레이어 머리 위를 넘어갈 때 이동 방향이 반전되는 입력 문제
-
-이 문제들을 해결하는 구조를 직접 설계하면서, 라이브 서비스에서 쓸 수 있는 수준의 프레임워크를 목표로 발전시키고 있다.
+> 진행 중인 프로젝트입니다. 씬 관리·Session Stack·플레이어 시스템이 구현되어 있고, 계속 확장 중입니다.
 
 ---
 
-## 핵심 설계
+## 왜 만들었나
 
-### Preload 씬 기반 Singleton 관리
+오랫동안 라이브 서비스를 운영하면서 비슷한 문제들이 반복됐다.
 
-외부 DI 컨테이너 없이 생명주기와 초기화 순서를 명시적으로 제어하는 구조.
+- Singleton 생명주기와 초기화 순서를 명확하게 제어할 방법이 없어서, `DontDestroyOnLoad`를 여기저기 쓰다 보면 언제부터인가 흐름이 불투명해지는 문제
+- 씬 전환 순서를 코드로 강제하지 않으면 타이밍이 어긋나고, 유저 입장에서는 화면이 버벅이거나 전환이 어색하게 느껴지는 문제
+- Cinemachine 등 외부 카메라 시스템과 플레이어 입력을 함께 다루다 보면 컴포넌트 하나에 책임이 몰리면서 코드가 빠르게 복잡해지는 문제
 
-`MonoPreload<T>` 베이스 클래스를 상속한 Singleton들이 Preload 씬에서 생성되어 앱 전체 생존한다. `DontDestroyOnLoad` 직접 호출 없이 Preload 씬 자체가 영속성을 보장한다.
+이걸 한번은 제대로 구조로 풀어보고 싶었다.
+
+---
+
+## Preload 씬 기반 Singleton 관리
+
+Unity에서 Singleton을 유지하는 흔한 방법은 `DontDestroyOnLoad`다. 하지만 이걸 여기저기 쓰다 보면 어떤 오브젝트가 언제 생성되고 얼마나 사는지 파악하기 어려워진다.
+
+NexusFrame은 씬 자체를 수명의 단위로 쓴다. 역할에 따라 두 씬으로 나눠 필요한 시점에만 로드한다.
+
+**Preload 씬** — 앱 전체에서 항상 필요한 요소. 시작부터 종료까지 상주한다.
+
+| 오브젝트 | 역할 |
+|----------|------|
+| `SceneDirector` | 씬 로딩 전담 |
+| `Transition` | 전환 연출 |
+| `Camera` | 메인 카메라 |
+| `EventSystem` | UGUI 이벤트 처리 |
+
+**GamePlay 씬** — 게임플레이 구간에서만 필요한 요소. Level 씬 로드 시 함께 올라오고, 메뉴 구간에서는 로드하지 않는다.
+
+| 오브젝트 | 역할 |
+|----------|------|
+| `GamePlaySystem` | Session Stack 관리 |
+
+`MonoPreload<T>`는 두 씬 모두에서 쓰는 Singleton 베이스 클래스다. 차이는 어느 씬에 배치하느냐, 즉 **수명의 범위**다. `DontDestroyOnLoad` 호출 없이 씬이 영속성을 보장하고, 초기화 순서는 씬 로드 순서로 명시적으로 제어된다.
+
+---
+
+## GamePlaySystem — Session Stack
+
+이 프레임워크의 핵심. 게임 상태(Session)를 Stack으로 관리하며, 씬 전환 타이밍과 생명주기 전체를 제어한다.
+
+`SceneDirector`는 씬 로딩·언로딩만 전담하는 하위 수단이다. GamePlaySystem이 언제 로드하고 언로드할지 결정하고, SceneDirector는 그 명령을 실행한다.
+
+### 설계 철학
+
+게임 진행은 **어디서(Stage)** 와 **무엇을 하는가(Session)** 로 분리해서 관리한다.
+
+- `Stage` — 현재 로드된 씬이나 오브젝트. 물리적인 공간
+- `Session` — 그 위에서 실행 중인 게임 상태. 탐색인지, 전투인지, 대화인지
+
+둘을 분리하면 같은 공간을 여러 게임 흐름에서 공유해서 쓸 수 있다. 예를 들어 필드에서 몬스터를 만나 Battle Session으로 전환해도 필드 Stage는 그대로 유지된다. 전투가 끝나면 Pop으로 돌아오고, 필드를 다시 로드할 필요가 없다.
+
+### Session 타입
+
+게임 상태를 나타내는 단위. 각 Session은 하나의 Stage(씬 또는 오브젝트)를 갖는다.
+
+`Exploration` / `Battle` / `Narrative`
+
+### Session 생명주기
+
+단일 Session의 상태 흐름.
 
 ```
-App Start → Preload.unity 로드
-  └─ SceneDirector 생성 (씬 전환 단일 진입점)
-  └─ Transition 생성 (전환 연출 담당)
-  └─ GamePlaySystem 생성 (Session Stack 관리)
-  └─ 이후 모든 씬 전환은 SceneDirector.LoadScene() 경유
+Created → Played → SessionIn → ... → SessionOut → (Paused | Slept | Stopped) → (Resumed | Destroyed)
 ```
 
-### GamePlaySystem - Session Stack 기반 게임 진행 관리
+- `Created` / `Destroyed` — 생성·소멸
+- `Played` — 씬 로드 완료, 활성 상태 진입
+- `SessionIn` — 화면이 보이기 시작하는 시점의 콜백
+- `SessionOut` — 화면에서 사라지기 직전의 콜백
+- `Paused` — Push로 덮인 상태. 오브젝트 유지
+- `Slept` — Push로 덮인 상태. 오브젝트 비활성화
+- `Resumed` — Paused 또는 Slept에서 복귀
+- `Stopped` — 제거 직전 상태
 
-씬 전환 타이밍 문제를 해결하기 위해 설계한 핵심 시스템. `SceneDirector`가 씬 로딩을 담당하고, `GamePlaySystem`이 게임 상태(Session)를 Stack으로 관리한다.
+### 전환 순서
 
-**전환 순서를 코드 레벨에서 강제한다:**
+전환 시 이전 Session과 이후 Session의 흐름이 맞물린다.
 
 ```
-EnterSessionOut → Transition.Scope() 진입 → 언로드/로드 → Scope 해제 → EnterSessionIn
+[이전] SessionOut → Transition 시작 → Paused / Slept / Stopped+Destroyed
+[이후]                                 Created+Played / Resumed → Transition 종료 → SessionIn
 ```
 
-이 순서가 깨지면 빈 화면 노출이나 전환 UI 불규칙 노출 같은 문제가 생긴다. `GamePlaySystem`은 이 순서를 항상 보장한다.
+이 순서를 코드 레벨에서 강제한다. 흐트러지면 빈 화면 노출이나 전환 UI 깜빡임 같은 문제로 이어진다.
 
-**4가지 전환 방식:**
+### Stage 타입
+
+Stage는 게임 상태(Session)와 분리되어 로딩 방식에만 집중한다. 같은 Session 타입이라도 어떤 Stage를 쓰느냐에 따라 씬을 새로 로드할 수도, 기존 씬을 그대로 쓸 수도, Prefab으로 구성할 수도 있다.
+
+| 타입 | 설명 |
+|------|------|
+| `Level` | 일반 게임 레벨 씬 |
+| `AdditiveLevel` | 추가 로드 레벨 씬 |
+| `SubLevel` | 기존 Stack 내 씬 재활용 (Anchor 기반) |
+| `PrefabInstance` | 씬 없이 Prefab 인스턴스로 구성 |
+
+### 전환 방식
 
 | 전환 | 동작 |
 |------|------|
-| `Replace` | 현재 Session 제거 후 새 Session으로 교체. Level 스테이지 교체 시 스택 전체 제거 |
-| `Push` | 현재 Session을 Stack에 유지한 채 새 Session 추가 |
-| `Pop` | 현재 Session 제거, 이전 Session 복귀 |
-| `PushOrReplace` | Stack이 비어 있으면 Replace, 1개면 Push, 2개 이상이면 Replace |
+| `Replace` | 현재 Session 제거 후 교체. Level 스테이지면 스택 전체 제거 |
+| `Push` | 현재 Session 유지한 채 새 Session 추가 |
+| `Pop` | 현재 Session 제거, 이전 Session으로 복귀 |
+| `PushOrReplace` | 전투처럼 반복 진입하는 Session이 스택에 중복으로 쌓이는 걸 방지하기 위해 사용. Level만 있으면 그 위에 Push, 이미 다른 Session이 있으면 Replace |
 
-**Stage 타입** - Session이 로드하는 씬/오브젝트의 종류:
+Push 시 이전 Session 처리는 `DoOverrideStage` 플래그로 결정된다. 스테이지를 덮어쓰면 `Paused`(오브젝트 유지), 아니면 `Slept`(오브젝트 비활성화).
 
-- `Level` - 일반 게임 레벨 씬
-- `AdditiveLevel` - 추가 로드 레벨 씬
-- `SubLevel` - 기존 Stack 내 씬 재활용 (Anchor 기반)
-- `PrefabInstance` - 씬 없이 Prefab 인스턴스로 구성
 
-**Session 타입** - 게임 상태의 종류:
 
-- `Exploration` - 탐색/이동
-- `Battle` - 전투
-- `Narrative` - 대화/연출
+---
 
-**Push 시 이전 Session 처리 방식:**
+## SceneDirector — 씬 로딩 전담
 
-`DoOverrideStage` 플래그로 결정된다. 새 Session이 스테이지를 덮어쓰면 이전 Session은 `Paused` (오브젝트 유지), 그렇지 않으면 `Slept` (오브젝트 비활성화) 상태로 전환된다. 두 상태 모두 Pop 시 `Resumed`로 복귀한다.
+씬 로딩·언로딩만을 전담하는 단일 진입점. GamePlaySystem의 지시에 따라 동작한다.
 
-**Session 생명주기:**
+모든 씬 전환이 `SceneDirector.LoadScene()`을 경유하며, Level 씬 로드 시 필수 씬(Preload, GamePlay)을 자동으로 선로드한다.
 
-```
-Created → Played → SessionOut → (Paused | Slept | Stopped) → (Resumed | Destroyed) → SessionIn
-```
-
-- `SessionOut` / `SessionIn` - 전환 연출 바깥(화면이 보이는 구간)의 진입/이탈 콜백
-- `Paused` / `Slept` - Push로 덮인 상태 (Paused: 스테이지 덮어씀, Slept: 오브젝트 비활성화)
-- `Stopped` / `Destroyed` - Replace 또는 Pop으로 완전히 제거되는 흐름
-
-**인게임 진입점 - `NaivePortal`:**
-
-Collider 기반 트리거 컴포넌트. Inspector에서 Session/Stage 설정을 직접 지정하면 플레이어가 충돌했을 때 `GamePlaySystem.LaunchSession()`을 호출한다. 씬 코드 없이 레벨 전환을 구성할 수 있다.
-
-### SceneDirector - 씬 전환 타이밍 보장
-
-씬 전환 타이밍 문제를 해결하기 위한 단일 진입점.
-
-모든 씬 전환이 `SceneDirector.LoadScene()`을 경유하며, 전환 전후 `Transition.Begin() / End()`가 자동으로 감싸진다. Level 씬은 필수 씬(Preload, GamePlay)을 자동으로 선로드한다.
-
-| SceneType | 역할 | 동작 방식 |
-|-----------|------|-----------|
+| SceneType | 역할 | 동작 |
+|-----------|------|------|
 | Preload (0) | Singleton 생성 | 항상 상주 |
 | Splash / Title / MainMenu | 화면 전환 | 전환 시 언로드 |
 | GamePlay (99) | 게임플레이 환경 | 상주, 한 번만 로드 |
 | Level (100+) | 게임 레벨 | 전환 시 언로드 |
-| Test (1000+) | 에디터 전용 | - |
+| Test (1000+) | 에디터 전용 | — |
 
-에디터에서 중간 씬을 직접 실행할 경우 `ColdStartup.cs`가 누락된 필수 씬을 자동으로 로드한다 (`#if UNITY_EDITOR`).
+에디터에서 중간 씬을 바로 실행할 경우, `ColdStartup.cs`(`#if UNITY_EDITOR`)가 누락된 필수 씬을 자동으로 로드한다.
 
-### Transition - 전환 연출
+---
 
-Strategy 패턴으로 전환 효과를 교체 가능하게 설계.
+## Transition — 전환 연출
 
-- `FadeTransitionEffect` - 0.5초 동안 알파 0.2 → 1.0 페이드
-- `InstantTransitionEffect` - 즉시 전환
+Strategy 패턴으로 전환 효과를 교체할 수 있게 설계했다.
+
+- `FadeTransitionEffect` — Alpha 페이드로 전환
+- `InstantTransitionEffect` — 즉시 전환
 
 `Begin() / End()`는 Reference Count 기반으로 중첩 호출에 안전하다. `GamePlaySystem`은 `Scope()` 패턴(`await using`)으로 Begin/End 쌍을 자동 보장한다.
 
-### 플레이어 시스템
+---
 
-입력 → 이동 → 애니메이션 파이프라인을 세 컴포넌트로 분리.
+## 플레이어 시스템
 
-- `PlayerControllerBase` - Cinemachine과 동일한 `IInputAxisOwner` 인터페이스로 입력 계약 정의
-- `PlayerController` - `CharacterController` 기반 이동. 카메라 공간 입력을 월드 공간으로 변환
-- `PlayerAnimator` - 컨트롤러와 독립적으로 트랜스폼 델타를 읽어 애니메이터 파라미터 구동
+Cinemachine과 Input System을 함께 쓰면 입력·카메라·이동·애니메이션이 얽히면서 컴포넌트 하나에 책임이 빠르게 몰린다. 이걸 세 컴포넌트 파이프라인으로 분리해 각자의 책임을 명확히 했다.
 
-`CameraRelativeInputFrameResolver`가 카메라가 플레이어 머리 위를 넘을 때 입력 방향이 반전되는 문제를 블렌딩으로 해결한다.
+Cinemachine과 동일한 `IInputAxisOwner` 인터페이스를 채택해 카메라-플레이어 입력 구조를 일관되게 맞췄다. 입력 소스를 교체해도 이동·애니메이션 코드는 건드릴 필요가 없다.
+
+- `PlayerControllerBase` — `IInputAxisOwner` 기반 입력 계약 정의. 입력 소스 교체 가능
+- `PlayerController` — `CharacterController` 기반 이동. 카메라 공간 입력을 월드 공간으로 변환
+- `PlayerAnimator` — 트랜스폼 델타를 읽어 애니메이터 파라미터 구동. 컨트롤러와 완전히 독립
+
+`CameraRelativeInputFrameResolver`는 카메라가 플레이어 머리 위를 넘을 때 입력 방향이 반전되는 문제를 블렌딩으로 처리한다.
 
 ---
 
@@ -133,7 +171,7 @@ App Start
                  └─ Title → TitleController (아무 키)
                       └─ MainMenu → MainMenuController (New Game)
                            └─ World0 (Level)
-                                └─ SceneDirector가 Preload + GamePlay 자동 로드
+                                └─ SceneDirector가 GamePlay.unity 자동 로드
                                      └─ GamePlaySystem.LaunchSession() → Exploration/World0
 ```
 
@@ -142,7 +180,7 @@ App Start
 ## 기술 스택
 
 - **Unity** URP 17.3.0
-- **UniTask** - async/await 기반 씬 로딩, 전환 시퀀스
+- **UniTask** — async/await 기반 씬 로딩·전환 시퀀스
 - **Cinemachine** 3.1.6
 - **Input System** 1.18.0
 - **C#**
@@ -155,7 +193,7 @@ App Start
 
 테스트: Unity Editor → Window > General > Test Runner
 - Runtime 테스트: `Assets/NexusFrameAssets/Tests/Runtime`
-  - `SceneFlowTests` - Splash→World0 전체 플로우 및 ColdStartup 시나리오 검증
+  - `SceneFlowTests` — Splash→World0 전체 플로우 및 ColdStartup 시나리오 검증
 
 ---
 
@@ -164,10 +202,9 @@ App Start
 - [x] Preload 씬 기반 Singleton 관리
 - [x] SceneDirector 씬 전환 시스템
 - [x] Transition (Fade / Instant)
-- [x] GamePlaySystem - Session Stack (Replace / Push / Pop / PushOrReplace)
-- [x] Session 생명주기 (Created → Played → SessionOut/In → Paused/Slept → Resumed → Stopped → Destroyed)
+- [x] GamePlaySystem — Session Stack (Replace / Push / Pop / PushOrReplace)
+- [x] Session 생명주기
 - [x] Stage 타입 (Level / AdditiveLevel / SubLevel / PrefabInstance)
-- [x] NaivePortal - Inspector 설정 기반 인게임 세션 전환 트리거
 - [x] 플레이어 시스템 (입력 / 이동 / 애니메이션 분리)
 - [x] CameraRelativeInputFrameResolver
 - [ ] Session / Stage Pool
