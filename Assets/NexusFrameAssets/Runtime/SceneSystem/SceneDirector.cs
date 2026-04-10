@@ -69,15 +69,22 @@ namespace NexusFrame
         {
             Debug.Assert(!string.IsNullOrEmpty(sceneName));
             var sceneType = SceneUtils.GetSceneType(sceneName);
-
-            if (SceneUtils.IsGamePlayRequired(sceneType) == false)
+            if (SceneUtils.IsGamePlayRequired(sceneType))
+            {
+                await EnsureGamePlayReady();
+                await GamePlaySystem.LaunchSessionAtColdStartup(sceneName);
+            }
+            else
             {
                 await LoadScene(sceneName);
-                return;
             }
 
-            await EnsurePreloadReady();
-            await Instance.LoadGamePlaySceneByColdStartUp(sceneName);
+        }
+
+        public static async UniTask UnloadAllContentScenes()
+        {
+            if (!HasInstance) return;
+            await Instance.UnloadContentScenes();
         }
 
         public static async UniTask UnloadScene(string sceneName)
@@ -104,7 +111,9 @@ namespace NexusFrame
             {
                 return;
             }
+            // GamePlay 최초 로딩 시 SceneDirector 에 등록된 contents scene 은 제거 한다.
             _ = Instance._loadedPrerequisiteScenes.Add(SceneType.GamePlay);
+            await UnloadAllContentScenes();
             await SceneManager.LoadSceneAsync(SceneUtils.GamePlaySceneName, LoadSceneMode.Additive);
             await UniTask.WaitUntil(() => GamePlaySystem.HasInstance);
         }
@@ -130,17 +139,6 @@ namespace NexusFrame
                 loadedScene = SceneManager.GetSceneByName(sceneName);
             }
             return loadedScene;
-        }
-
-        private async UniTask LoadGamePlaySceneByColdStartUp(string sceneName)
-        {
-            var sceneType = SceneUtils.GetSceneType(sceneName);
-            await using (await Transition.Instance.Scope(TransitionEffectType.Fade))
-            {
-                await UnloadContentScenes();
-                await EnsurePrerequisitesLoaded(sceneType);
-                await GamePlaySystem.LaunchSessionAtColdStartup(sceneName);
-            }
         }
 
         private async UniTask UnloadSceneCore(string sceneName)
