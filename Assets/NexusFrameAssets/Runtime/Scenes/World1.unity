@@ -6833,8 +6833,8 @@ MonoBehaviour:
   Landed:
     m_PersistentCalls:
       m_Calls: []
-  characterController: {fileID: 4265786932562089107}
-  inputFrameResolver:
+  _characterController: {fileID: 4265786932562089107}
+  _inputFrameResolver:
     _blendTime: 2
 --- !u!1 &4265786932562089110
 GameObject:

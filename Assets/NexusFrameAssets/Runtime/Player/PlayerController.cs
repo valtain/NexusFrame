@@ -16,7 +16,7 @@ public class PlayerController : PlayerControllerBase
     public override bool IsMoving => _isMoving;
 
     [SerializeField]
-    private CharacterController characterController;
+    private CharacterController _characterController;
 
     private Transform _cachedTransform;
 
@@ -69,7 +69,7 @@ public class PlayerController : PlayerControllerBase
 
         // 이동량 적용
         {
-            characterController.Move(_moveXzVector * deltaTime);
+            _characterController.Move(_moveXzVector * deltaTime);
         }
 
         // 이동량 기반 주시 방향 조정
