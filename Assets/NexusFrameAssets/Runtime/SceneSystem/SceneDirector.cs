@@ -127,7 +127,7 @@ namespace NexusFrame
             Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be loaded directly: {sceneName}");
 
             Scene loadedScene;
-            await using (await Transition.Instance.Scope(TransitionEffectType.Fade))
+            await using (await UiSystem.ScopeTransition(TransitionEffectType.Fade))
             {
                 await EnsurePrerequisitesLoaded(sceneType);
                 if (unloadContents)
@@ -147,7 +147,7 @@ namespace NexusFrame
             Debug.Assert(sceneType != SceneType.None, $"SceneType not found: {sceneName}");
             Debug.Assert(_loadedContentScenes.Contains(sceneName), $"Scene is not loaded: {sceneName}");
             Debug.Assert(!SceneUtils.IsPrerequisiteScene(sceneType), $"Prerequisite scene cannot be unloaded directly: {sceneName}");
-            await using (await Transition.Instance.Scope(TransitionEffectType.Fade))
+            await using (await UiSystem.ScopeTransition(TransitionEffectType.Fade))
             {
                 _loadedContentScenes.Remove(sceneName);
                 await SceneManager.UnloadSceneAsync(sceneName);

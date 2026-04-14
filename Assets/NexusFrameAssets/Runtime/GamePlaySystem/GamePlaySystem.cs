@@ -99,12 +99,14 @@ namespace NexusFrame
 
             await prevSession.EnterSessionOut();
 
-            await using (await Transition.Instance.Scope(transitionEffectType))
+            await using (await UiSystem.ScopeTransition(transitionEffectType))
             {
                 await RemovePrevSessions(removeAll: false);
                 await Resources.UnloadUnusedAssets();
                 nextSession = _sessionStack.Peek();
                 await nextSession.EnterResumed();
+                if (UiSystem.HasInstance)
+                    await UiSystem.Instance.MainView.SetView(nextSession.GetMainView());
             }
 
             await nextSession.EnterSessionIn();
@@ -115,7 +117,7 @@ namespace NexusFrame
             if (_sessionStack.TryPeek(out var prevSession))
             {
                 await prevSession.EnterSessionOut();
-                await using(await Transition.Instance.Scope(transitionEffectType))
+                await using(await UiSystem.ScopeTransition(transitionEffectType))
                 {
                     // Level(Main Level)은 항상 하나만 존재한다.
                     // 다른 세션들이 현재 Main Level에 의존할 가능성이 높으므로, Level 전환 시 스택 전체를 제거한다.
@@ -128,7 +130,7 @@ namespace NexusFrame
             }
             else
             {
-                await using(await Transition.Instance.Scope(transitionEffectType))
+                await using(await UiSystem.ScopeTransition(transitionEffectType))
                 {
                     await PlayNewSession(nextSession);
                 }
@@ -145,7 +147,7 @@ namespace NexusFrame
 
             await prevSession.EnterSessionOut();
 
-            await using (await Transition.Instance.Scope(transitionEffectType))
+            await using (await UiSystem.ScopeTransition(transitionEffectType))
             {
                 if (nextSession.Stage.DoOverrideStage)
                 {
@@ -168,6 +170,8 @@ namespace NexusFrame
             NotifySessionStackUpdate();
             await session.Stage.Load();
             await session.EnterPlayed();
+            if (UiSystem.HasInstance)
+                await UiSystem.Instance.MainView.SetView(session.GetMainView());
         }
 
         private async UniTask RemovePrevSessions(bool removeAll)
@@ -176,6 +180,9 @@ namespace NexusFrame
             {
                 return;
             }
+
+            if (UiSystem.HasInstance)
+                await UiSystem.Instance.MainView.ClearView();
 
             var unloadCount = removeAll ? _sessionStack.Count : 1;
             for (var i = 0; i < unloadCount; ++i)

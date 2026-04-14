@@ -58,6 +58,13 @@ namespace NexusFrame
 
         private System.Action<PlaySessionBase, PlaySessionStatus> _onStatusChanged;
 
+        /// <summary>
+        /// 이 세션의 MainView 뷰를 반환한다.
+        /// UiSystem이 SessionIn 직후 MainViewLayer에 설정한다.
+        /// null 반환 시 MainView 레이어를 비운다.
+        /// </summary>
+        public virtual IUiView GetMainView() => null;
+
         protected virtual UniTask OnEnterCreateCore() => UniTask.CompletedTask;
         protected virtual UniTask OnEnterPlayCore() => UniTask.CompletedTask;
         protected virtual UniTask OnEnterSessionInCore() => UniTask.CompletedTask;
