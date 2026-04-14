@@ -3,7 +3,9 @@
     "rootNamespace": "NexusFrame",
     "references": [
         "UniTask",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.TextMeshPro",
+        "PrimeTween.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

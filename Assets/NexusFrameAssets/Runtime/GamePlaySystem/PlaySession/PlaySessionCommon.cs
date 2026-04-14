@@ -58,13 +58,6 @@ namespace NexusFrame
 
         private System.Action<PlaySessionBase, PlaySessionStatus> _onStatusChanged;
 
-        /// <summary>
-        /// 이 세션의 MainView 뷰를 반환한다.
-        /// UiSystem이 SessionIn 직후 MainViewLayer에 설정한다.
-        /// null 반환 시 MainView 레이어를 비운다.
-        /// </summary>
-        public virtual IUiView GetMainView() => null;
-
         protected virtual UniTask OnEnterCreateCore() => UniTask.CompletedTask;
         protected virtual UniTask OnEnterPlayCore() => UniTask.CompletedTask;
         protected virtual UniTask OnEnterSessionInCore() => UniTask.CompletedTask;
@@ -78,7 +71,14 @@ namespace NexusFrame
         public async UniTask EnterCreated()   { SetStatus(PlaySessionStatus.Created);    await OnEnterCreateCore();     }
         public async UniTask EnterPlayed()    { SetStatus(PlaySessionStatus.Played);     await OnEnterPlayCore();       }
         public async UniTask EnterSessionIn() { SetStatus(PlaySessionStatus.SessionIn);  await OnEnterSessionInCore();  }
-        public async UniTask EnterSessionOut(){ SetStatus(PlaySessionStatus.SessionOut); await OnEnterSessionOutCore(); }
+        public async UniTask EnterSessionOut()
+        {
+            SetStatus(PlaySessionStatus.SessionOut);
+            await OnEnterSessionOutCore();
+            // Safety: Session이 HideView를 누락했을 경우 Layer가 정리
+            if (UiSystem.HasInstance && UiSystem.Instance.MainView.CurrentView != null)
+                await UiSystem.Instance.MainView.ClearView();
+        }
         public async UniTask EnterStopped()   { SetStatus(PlaySessionStatus.Stopped);    await OnEnterStopCore();       }
         public async UniTask EnterPaused()    { SetStatus(PlaySessionStatus.Paused);     await OnEnterPauseCore();      }
         public async UniTask EnterSlept()     { SetStatus(PlaySessionStatus.Slept);      await OnEnterSleepCore();   Stage.OnSessionSlept();   }

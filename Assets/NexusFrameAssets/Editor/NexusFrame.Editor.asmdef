@@ -2,7 +2,9 @@
     "name": "NexusFrame.Editor",
     "rootNamespace": "NexusFrame",
     "references": [
-        "NexusFrame"
+        "NexusFrame",
+        "Unity.TextMeshPro",
+        "Unity.TextMeshPro.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -11,7 +13,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

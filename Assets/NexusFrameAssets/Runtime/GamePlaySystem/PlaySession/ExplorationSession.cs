@@ -4,19 +4,21 @@ namespace NexusFrame
 {
     public class ExplorationSession : PlaySessionBase
     {
-        public ExplorationSession() : base(PlaySessionType.Exploration)
+        private ExplorationHud _hud;
+
+        public ExplorationSession() : base(PlaySessionType.Exploration) { }
+
+        protected override async UniTask OnEnterSessionInCore()
         {
+            _hud = await UiSystem.Instance.MainView.ShowView<ExplorationHud>();
+            if (Stage != null)
+                _hud.SetStageName(Stage.StageName);
         }
 
-        protected override UniTask OnEnterSessionInCore()
+        protected override async UniTask OnEnterSessionOutCore()
         {
-            // [TODO]
-            return UniTask.CompletedTask;
-        }
-        protected override UniTask OnEnterSessionOutCore()
-        {
-            // [TODO]
-            return UniTask.CompletedTask;
+            await UiSystem.Instance.MainView.HideView(_hud);
+            _hud = null;
         }
     }
 }

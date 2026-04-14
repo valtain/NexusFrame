@@ -105,8 +105,6 @@ namespace NexusFrame
                 await Resources.UnloadUnusedAssets();
                 nextSession = _sessionStack.Peek();
                 await nextSession.EnterResumed();
-                if (UiSystem.HasInstance)
-                    await UiSystem.Instance.MainView.SetView(nextSession.GetMainView());
             }
 
             await nextSession.EnterSessionIn();
@@ -170,8 +168,6 @@ namespace NexusFrame
             NotifySessionStackUpdate();
             await session.Stage.Load();
             await session.EnterPlayed();
-            if (UiSystem.HasInstance)
-                await UiSystem.Instance.MainView.SetView(session.GetMainView());
         }
 
         private async UniTask RemovePrevSessions(bool removeAll)
@@ -180,9 +176,6 @@ namespace NexusFrame
             {
                 return;
             }
-
-            if (UiSystem.HasInstance)
-                await UiSystem.Instance.MainView.ClearView();
 
             var unloadCount = removeAll ? _sessionStack.Count : 1;
             for (var i = 0; i < unloadCount; ++i)
