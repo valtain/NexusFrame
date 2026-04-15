@@ -98,16 +98,8 @@ Push로 덮인 Session은 `Paused`(오브젝트 유지) 또는 `Slept`(비활성
 
 ## 개발 방식 — Claude Code 활용
 
-단순 코드 생성 보조가 아니라, 설계 의사결정 과정에 함께 참여시키는 방식으로 쓰고 있다.
-
-| 영역 | 내용 |
-|------|------|
-| 설계 트레이드오프 논의 | `AsValueTask` vs duck-typing, 메서드 분리 기준 등 구조 결정을 대화로 풀어냄 |
-| 커스텀 슬래시 커맨드 | `/check-convention`, `/fix-warnings`, `/git-commit`, `/작업일지` 등 반복 작업 자동화 |
-| 대규모 리팩토링 지원 | Stage/Session 전체 리네이밍, UPM 패키지 레이아웃 재구성 |
-| 테스트 자동화 | Splash→World0 전체 플로우 Runtime 테스트 작성 |
-
-멀티파일 리팩토링 전에는 Plan Mode로 방향을 먼저 합의하고,
+설계 의사결정, 리팩토링, 반복 작업 자동화에 Claude Code를 적극 활용하고 있다.
+커스텀 슬래시 커맨드(`/check-convention`, `/fix-warnings`, `/git-commit` 등)로 워크플로우를 자동화하고,
 CLAUDE.md에 Unity 주의사항을 누적해서 반복 오류를 줄이는 방식으로 운용하고 있다.
 
 <br>
