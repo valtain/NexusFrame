@@ -62,12 +62,14 @@ namespace NexusFrame
 
         public static bool IsPrerequisiteScene(SceneType sceneType)
         {
+#pragma warning disable IDE0072 // Add missing cases
             return sceneType switch
             {
                 SceneType.Preload => true,
                 SceneType.GamePlay => true,
                 _ => false
             };
+#pragma warning restore IDE0072 // Add missing cases
         }
 
         private static readonly IReadOnlyCollection<SceneType> _preloadRequisiteScenes = new List<SceneType>() { SceneType.Preload };

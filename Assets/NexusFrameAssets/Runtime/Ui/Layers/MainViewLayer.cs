@@ -71,7 +71,8 @@ namespace NexusFrame
         /// </summary>
         public async UniTask ClearView()
         {
-            if (CurrentView == null) return;
+            if (CurrentView == null)
+                return;
             await CurrentView.Hide();
             CurrentView = null;
         }
