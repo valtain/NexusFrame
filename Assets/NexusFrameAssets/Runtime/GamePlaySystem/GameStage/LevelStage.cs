@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace NexusFrame
