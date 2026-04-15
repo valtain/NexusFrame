@@ -65,14 +65,14 @@ namespace NexusFrame
             return await Instance.LoadSceneCore(sceneName, unloadContents: false);
         }
 
-        public static async UniTask LoadColdStartupScene(string sceneName)
+        public static async UniTask LoadColdStartupScene(PlaySessionType sessionType, string sceneName)
         {
             Debug.Assert(!string.IsNullOrEmpty(sceneName));
             var sceneType = SceneUtils.GetSceneType(sceneName);
             if (SceneUtils.IsGamePlayRequired(sceneType))
             {
                 await EnsureGamePlayReady();
-                await GamePlaySystem.LaunchSessionAtColdStartup(sceneName);
+                await GamePlaySystem.LaunchSessionAtColdStartup(sessionType, sceneName);
             }
             else
             {

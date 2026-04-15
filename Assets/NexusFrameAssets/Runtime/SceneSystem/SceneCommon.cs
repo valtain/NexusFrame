@@ -19,7 +19,7 @@ namespace NexusFrame
     {
         public static readonly string PreloadSceneName = "Preload";
         public static readonly string GamePlaySceneName = "GamePlay";
-        private static readonly IReadOnlyDictionary<string, SceneType> SceneTypeDic = new Dictionary<string, SceneType>
+        private static readonly IReadOnlyDictionary<string, SceneType> _sceneTypeDic = new Dictionary<string, SceneType>
         {
             { PreloadSceneName, SceneType.Preload },
             { "Splash", SceneType.Splash },
@@ -27,6 +27,7 @@ namespace NexusFrame
             { "MainMenu", SceneType.MainMenu },
             { "World0", SceneType.Level },
             { "World1", SceneType.Level },
+            { "Battle0", SceneType.Level },
             { GamePlaySceneName, SceneType.GamePlay },
             { "Intro", SceneType.Title },
         };
@@ -35,7 +36,7 @@ namespace NexusFrame
         {
             return string.IsNullOrEmpty(sceneName)
                 ? SceneType.None
-                : SceneTypeDic.GetValueOrDefault(sceneName, SceneType.Test);
+                : _sceneTypeDic.GetValueOrDefault(sceneName, SceneType.Test);
         }
 
         public static IReadOnlyCollection<SceneType> GetPrerequisiteScenes(SceneType sceneType)

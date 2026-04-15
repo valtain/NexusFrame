@@ -7,6 +7,7 @@ namespace NexusFrame
     [DefaultExecutionOrder(-1000)]
     public class ColdStartup : MonoBehaviour
     {
+        [SerializeField] private PlaySessionType _sessionType = PlaySessionType.Exploration;
         private void Awake()
         {
 #if UNITY_EDITOR
@@ -21,7 +22,7 @@ namespace NexusFrame
             {
                 if (go != gameObject) go.SetActive(false);
             }
-            SceneDirector.LoadColdStartupScene(currentSceneName).Forget();
+            SceneDirector.LoadColdStartupScene(_sessionType, currentSceneName).Forget();
 #endif
         }
 

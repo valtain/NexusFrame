@@ -45,11 +45,11 @@ namespace NexusFrame
             PopSessionStatic(transitionEffectType).Forget();
         }
 
-        public static UniTask LaunchSessionAtColdStartup(string sceneName)
+        public static UniTask LaunchSessionAtColdStartup(PlaySessionType sessionType, string sceneName)
         {
             var stageDesc = new GameStageDesc(GameStageType.Level, sceneName, false);
             return Instance.LaunchNewSessionCore(
-                PlaySessionType.Exploration,
+                sessionType,
                 PlaySessionSwitch.Replace,
                 Instance.GetStage(stageDesc),
                 TransitionEffectType.Fade);
