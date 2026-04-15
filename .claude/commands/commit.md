@@ -22,21 +22,25 @@ stage할 파일 번호를 입력해줘 (예: 1 2 / all / skip)
 아래 기준으로 한국어 커밋 메시지 초안을 작성해:
 
 **스타일 규칙:**
-- 한국어, 짧고 명사형 종결 (예: "BattleHud 추가", "SceneDirector 리팩토링")
-- 설계 의도 중심 — 파일 나열 아님 (예: "PlayerController 명명 규칙 정비" O / "PlayerController.cs 수정" X)
+- `[prefix] 한국어 메시지` 형식
+- 한국어, 짧고 명사형 종결 (예: "[feat] BattleHud 추가", "[refactor] SceneDirector 정리")
+- 설계 의도 중심 — 파일 나열 아님 (예: "[style] PlayerController 명명 규칙 정비" O / "PlayerController.cs 수정" X)
 - 마침표 없음
 - 여러 관심사가 섞였으면 가장 핵심적인 것 하나로 대표
 
-**참고 기존 스타일:**
-- "Battle session 초기 구현"
-- "UiSystem 기본 구현"
-- "ColdStartup 모듈 refactoring"
-- "naming convention 에 맞게 수정"
+**prefix 목록:**
+- `[feat]`     기능 구현, 시스템 추가
+- `[fix]`      버그 수정
+- `[refactor]` 구조 개선, 이름 변경
+- `[style]`    컨벤션 정비, 포맷
+- `[test]`     테스트 추가/수정
+- `[docs]`     README, 주석
+- `[chore]`    도구, 설정, .claude 커맨드 등 프로젝트 외 유지보수
 
 초안 출력:
 ```
 커밋 메시지 초안:
-  > BattleHud 승리 버튼 이벤트 연결
+  > [feat] BattleHud 승리 버튼 이벤트 연결
 
 수정하려면 메시지를 직접 입력해줘. 그대로 진행하려면 Enter.
 ```
