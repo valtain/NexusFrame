@@ -56,10 +56,6 @@ namespace NexusFrame
         [field: SerializeField] public Button DefeatButton  { get; private set; }
         [field: SerializeField] public Button EscapeButton  { get; private set; }
 
-        public event System.Action OnVictoryClicked;
-        public event System.Action OnDefeatClicked;
-        public event System.Action OnEscapeClicked;
-
         private Vector2 _onScreenPos;
 
         private void Awake()
@@ -74,10 +70,6 @@ namespace NexusFrame
             Debug.Assert(EscapeButton      != null, "[BattleHud] EscapeButton이 할당되지 않았습니다.");
 
             _onScreenPos = SlidePanel.anchoredPosition;
-
-            VictoryButton.onClick.AddListener(() => OnVictoryClicked?.Invoke());
-            DefeatButton.onClick.AddListener(()  => OnDefeatClicked?.Invoke());
-            EscapeButton.onClick.AddListener(()  => OnEscapeClicked?.Invoke());
         }
 
         // ── Data Binding ──────────────────────────────────────────────────────
