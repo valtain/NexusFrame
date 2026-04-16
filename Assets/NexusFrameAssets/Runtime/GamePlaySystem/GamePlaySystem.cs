@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace NexusFrame
 {
-    public class GamePlaySystem: MonoPreload<GamePlaySystem>
+    public class GamePlaySystem : MonoPreload<GamePlaySystem>
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() => ResetInstance();
@@ -33,16 +33,22 @@ namespace NexusFrame
         // ── Static Entry Points ───────────────────────────────────────────
 
         public static void LaunchSession(PlaySessionType sessionType, PlaySessionSwitch switchType, GameStageDesc stageDesc, TransitionEffectType transitionEffectType)
-            => LaunchSessionStatic(sessionType, switchType, stageDesc, transitionEffectType).Forget();
+        {
+            async UniTask Impl()
+            {
+                await SceneDirector.EnsureGamePlayReady();
+                if (switchType == PlaySessionSwitch.Pop)
+                    await Instance.PopSessionCore(transitionEffectType);
+                else
+                    await Instance.LaunchNewSessionCore(sessionType, switchType, Instance.GetStage(stageDesc), transitionEffectType);
+            }
+            Impl().Forget(ex => Debug.LogException(ex));
+        }
 
         public static void PopSession(TransitionEffectType transitionEffectType)
-            => PopSessionStatic(transitionEffectType).Forget();
-
-        public static void LaunchSession(PlaySessionSwitch switchType, TransitionEffectType transitionEffectType)
         {
-            Debug.Assert(switchType == PlaySessionSwitch.Pop, "This overload is for Pop only.");
-            Debug.Assert(HasInstance && 2 <= Instance._sessionStack.Count);
-            PopSessionStatic(transitionEffectType).Forget();
+            Debug.Assert(HasInstance);
+            Instance.PopSessionCore(transitionEffectType).Forget(ex => Debug.LogException(ex));
         }
 
         public static UniTask LaunchSessionAtColdStartup(PlaySessionType sessionType, string sceneName)
@@ -53,21 +59,6 @@ namespace NexusFrame
                 PlaySessionSwitch.Replace,
                 Instance.GetStage(stageDesc),
                 TransitionEffectType.Fade);
-        }
-
-        private static async UniTask LaunchSessionStatic(PlaySessionType sessionType, PlaySessionSwitch switchType, GameStageDesc stageDesc, TransitionEffectType transitionEffectType)
-        {
-            await SceneDirector.EnsureGamePlayReady();
-            if (switchType == PlaySessionSwitch.Pop)
-                await Instance.PopSessionCore(transitionEffectType);
-            else
-                await Instance.LaunchNewSessionCore(sessionType, switchType, Instance.GetStage(stageDesc), transitionEffectType);
-        }
-
-        private static async UniTask PopSessionStatic(TransitionEffectType transitionEffectType)
-        {
-            Debug.Assert(HasInstance);
-            await Instance.PopSessionCore(transitionEffectType);
         }
 
         private async UniTask LaunchNewSessionCore(PlaySessionType sessionType, PlaySessionSwitch switchType, GameStageBase stage, TransitionEffectType transitionEffectType)
@@ -229,8 +220,8 @@ namespace NexusFrame
                 GameStageType.SubLevel => FindSubLevelStage(desc.AssetPath),
                 GameStageType.PrefabInstance => new PrefabInstanceStage(desc.AssetPath, desc.DoOverrideStage),
                 GameStageType.GoPrevLevel => null,
-                GameStageType.None => null,
-                _ => null
+                GameStageType.None => throw new ArgumentException("None is not a valid stage type."),
+                _ => throw new ArgumentOutOfRangeException(nameof(desc.StageType), desc.StageType, null)
             };
         }
 
@@ -242,7 +233,7 @@ namespace NexusFrame
                 PlaySessionType.Exploration => new ExplorationSession(),
                 PlaySessionType.Battle => new BattleSession(),
                 PlaySessionType.Narrative => new NarrativeSession(),
-                _ => null
+                _ => throw new ArgumentOutOfRangeException(nameof(sessionType), sessionType, null)
             };
         }
 
