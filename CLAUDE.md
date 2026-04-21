@@ -10,6 +10,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Editor tests: `Assets/NexusFrameAssets/Tests/Editor`
   - Runtime tests: `Assets/NexusFrameAssets/Tests/Runtime`
 
+## Operational Rules
+- **Plan Phase**: 모든 작업의 'Plan 모드' 진입 시, 반드시 `complexity.md`의 가이드라인을 확인하고 해당 작업의 복잡도를 먼저 평가할 것.
+- **Command Execution**: 실행하려는 커맨드에 `Complexity Hint`가 정의되어 있다면 이를 최우선으로 따를 것.
+- **Efficiency**: 복잡도가 Low로 판단되는 경우, 현재 모델이 고사양이라면 사용자에게 비용 절감을 위해 낮은 모델(Haiku 등)로의 전환이 가능한지 가볍게 언급할 것.
+
 ## Folder Convention
 
 - `Assets/NexusFrameAssets/` — main framework package, follows UPM package layout
